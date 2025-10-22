@@ -8,10 +8,10 @@ from matplotlib.axes import Axes
 import numpy as np
 
 from wisent_plots.styles.style_config import get_style
-from wisent_plots.charts.svg_area_chart import SVGAreaChart
-from wisent_plots.charts.svg_area_chart_gradient import SVGAreaChartGradient
-from wisent_plots.charts.svg_area_chart_pattern import SVGAreaChartPattern
-from wisent_plots.charts.svg_area_chart_2patterns import SVGAreaChart2Patterns
+from wisent_plots.charts.area.svg_area_chart import SVGAreaChart
+from wisent_plots.charts.area.svg_area_chart_gradient import SVGAreaChartGradient
+from wisent_plots.charts.area.svg_area_chart_pattern import SVGAreaChartPattern
+from wisent_plots.charts.area.svg_area_chart_2patterns import SVGAreaChart2Patterns
 
 
 class AreaChart:

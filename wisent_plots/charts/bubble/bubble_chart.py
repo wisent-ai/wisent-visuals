@@ -4,8 +4,8 @@ from typing import Optional, Union, List, Tuple
 import numpy as np
 
 from wisent_plots.styles.style_config import get_style
-from wisent_plots.charts.svg_bubble_chart import SVGBubbleChart
-from wisent_plots.charts.svg_radar_bubble_chart import SVGRadarBubbleChart
+from wisent_plots.charts.bubble.svg_bubble_chart import SVGBubbleChart
+from wisent_plots.charts.bubble.svg_radar_bubble_chart import SVGRadarBubbleChart
 
 
 class BubbleChart:

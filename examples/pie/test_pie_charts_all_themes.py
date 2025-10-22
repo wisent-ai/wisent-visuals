@@ -1,6 +1,6 @@
 """Test all pie chart themes (brand, black, white)."""
 
-from wisent_plots.charts.pie_chart import PieChart
+from wisent_plots.charts import PieChart
 
 # Sample data - 6 categories
 values = [25, 20, 15, 15, 13, 12]

@@ -3,7 +3,7 @@
 from typing import List, Optional
 import os
 
-from ..styles.style_config import get_style
+from wisent_plots.styles.style_config import get_style
 from .svg_radar_chart import SVGRadarChart
 
 

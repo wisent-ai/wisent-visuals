@@ -7,7 +7,7 @@ from matplotlib.axes import Axes
 import numpy as np
 
 from wisent_plots.styles.style_config import get_style
-from wisent_plots.charts.svg_line_chart import SVGLineChart
+from wisent_plots.charts.line.svg_line_chart import SVGLineChart
 
 
 class LineChart:

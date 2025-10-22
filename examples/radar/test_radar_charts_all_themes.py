@@ -1,6 +1,6 @@
 """Test all radar chart themes (brand, black, white)."""
 
-from wisent_plots.charts.radar_chart import RadarChart
+from wisent_plots.charts import RadarChart
 
 # Sample data - 2 series with 8 axes each (octagon)
 # Values are 0-100 representing distance from center

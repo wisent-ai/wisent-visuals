@@ -2,7 +2,7 @@
 
 from typing import Optional, Union, List, Tuple
 from wisent_plots.styles.style_config import get_style
-from wisent_plots.charts.svg_bar_chart import SVGBarChart
+from wisent_plots.charts.bar.svg_bar_chart import SVGBarChart
 
 
 class BarChart:

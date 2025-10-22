@@ -3,7 +3,7 @@
 from typing import List
 import xml.etree.ElementTree as ET
 
-from .area_chart_components import render_title_and_legend
+from wisent_plots.charts.area.area_chart_components import render_title_and_legend
 
 
 class SVGLineChart:

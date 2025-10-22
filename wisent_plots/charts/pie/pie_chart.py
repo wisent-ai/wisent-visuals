@@ -3,8 +3,8 @@
 from typing import List, Optional
 import os
 
-from ..styles.style_config import get_style
-from .svg_pie_chart import SVGPieChart
+from wisent_plots.styles.style_config import get_style
+from wisent_plots.charts.pie.svg_pie_chart import SVGPieChart
 
 
 class PieChart:

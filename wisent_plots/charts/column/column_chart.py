@@ -2,7 +2,7 @@
 
 from typing import Optional, Union, List, Tuple
 from wisent_plots.styles.style_config import get_style
-from wisent_plots.charts.svg_column_chart import SVGColumnChart
+from wisent_plots.charts.column.svg_column_chart import SVGColumnChart
 
 
 class ColumnChart:

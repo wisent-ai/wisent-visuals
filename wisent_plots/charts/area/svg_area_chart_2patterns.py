@@ -2,8 +2,8 @@
 
 import xml.etree.ElementTree as ET
 from typing import List
-from wisent_plots.charts.area_chart_components import render_title_and_legend
-from wisent_plots.charts.area_chart_renderer import _generate_stacked_paths
+from wisent_plots.charts.area.area_chart_components import render_title_and_legend
+from wisent_plots.charts.area.area_chart_renderer import _generate_stacked_paths
 
 # Base64-encoded pattern images
 # Seamless rotated squares pattern for middle band
