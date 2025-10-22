@@ -13,7 +13,8 @@ def render_area_chart(
     chart_start_y: int,
     chart_width: int,
     chart_height: int,
-    colors: dict
+    colors: dict,
+    style_config: dict = None
 ):
     """Render the main area chart with grid lines and x-axis labels.
 
@@ -26,6 +27,7 @@ def render_area_chart(
         chart_width: Width of chart area
         chart_height: Height of chart area
         colors: Color configuration dict
+        style_config: Optional style configuration dict (for solid colors, etc.)
     """
     # Create clipping path for chart area
     clip_id = "chart-clip"
@@ -45,34 +47,7 @@ def render_area_chart(
         chart_width, chart_height - 40
     )
 
-    # Draw bands back to front with same color but different opacities
-    # Top band (smallest, at top of chart) - opacity 0.4 (lightest)
-    ET.SubElement(svg, 'path', {
-        'd': paths[2][0],
-        'fill': colors['area'],  # #C5FFC8
-        'opacity': '0.4',
-        'fill-rule': 'evenodd',
-        'clip-path': f'url(#{clip_id})'
-    })
-
-    # Middle band - opacity 0.5
-    ET.SubElement(svg, 'path', {
-        'd': paths[1][0],
-        'fill': colors['area'],  # #C5FFC8
-        'opacity': '0.5',
-        'fill-rule': 'evenodd',
-        'clip-path': f'url(#{clip_id})'
-    })
-
-    # Bottom band (largest, at bottom of chart) - opacity 1.0 (darkest, fully opaque)
-    ET.SubElement(svg, 'path', {
-        'd': paths[0][0],
-        'fill': colors['area'],  # #C5FFC8
-        'fill-rule': 'evenodd',
-        'clip-path': f'url(#{clip_id})'
-    })
-
-    # Draw grid lines and x-axis labels
+    # Draw grid lines FIRST so area bands appear in front
     grid_spacing = 67
     for i in range(15):
         x = chart_x + (i * grid_spacing)
@@ -100,6 +75,66 @@ def render_area_chart(
                     'text-anchor': 'middle'
                 })
                 label_elem.text = label_text
+
+    # Draw area bands AFTER grid lines so they appear in front
+    # Check if we're using solid colors (style 5) or opacity-based colors
+    use_solid_colors = style_config and style_config.get('fill', {}).get('type') == 'solid'
+
+    if use_solid_colors:
+        # Style 5: Use distinct solid colors for each band
+        # Bottom (largest) - primary color (green)
+        ET.SubElement(svg, 'path', {
+            'd': paths[0][0],
+            'fill': colors['primary'],  # #C5FFC8
+            'fill-rule': 'evenodd',
+            'clip-path': f'url(#{clip_id})'
+        })
+
+        # Middle band - secondary color (red)
+        ET.SubElement(svg, 'path', {
+            'd': paths[1][0],
+            'fill': colors['secondary'],  # #FA5A46
+            'fill-rule': 'evenodd',
+            'clip-path': f'url(#{clip_id})'
+        })
+
+        # Top band (smallest) - accent color (purple)
+        ET.SubElement(svg, 'path', {
+            'd': paths[2][0],
+            'fill': colors['accent'],  # #B19ECC
+            'fill-rule': 'evenodd',
+            'clip-path': f'url(#{clip_id})'
+        })
+    else:
+        # Original opacity-based rendering
+        # Bottom should be lightest, top should be darkest
+        # Assign opacities to match: bottom=1.0 (lightest), top=0.4 (darkest)
+
+        # Top band (smallest) - opacity 0.4 (darkest)
+        ET.SubElement(svg, 'path', {
+            'd': paths[2][0],
+            'fill': colors['area'],  # #C5FFC8
+            'opacity': '0.4',
+            'fill-rule': 'evenodd',
+            'clip-path': f'url(#{clip_id})'
+        })
+
+        # Middle band - opacity 0.5
+        ET.SubElement(svg, 'path', {
+            'd': paths[1][0],
+            'fill': colors['area'],  # #C5FFC8
+            'opacity': '0.5',
+            'fill-rule': 'evenodd',
+            'clip-path': f'url(#{clip_id})'
+        })
+
+        # Bottom band (largest) - opacity 1.0 (lightest, fully opaque)
+        ET.SubElement(svg, 'path', {
+            'd': paths[0][0],
+            'fill': colors['area'],  # #C5FFC8
+            'fill-rule': 'evenodd',
+            'clip-path': f'url(#{clip_id})'
+        })
 
 
 def _generate_stacked_paths(

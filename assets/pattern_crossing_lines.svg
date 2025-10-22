@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="10" height="10" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">
+  <!-- Crossing diagonal lines pattern -->
+  <!-- Base color -->
+  <rect width="10" height="10" fill="#90B892"/>
+
+  <!-- Diagonal lines going one way (/) -->
+  <line x1="0" y1="10" x2="10" y2="0" stroke="#4F6650" stroke-width="0.5"/>
+
+  <!-- Diagonal lines going other way (\) -->
+  <line x1="0" y1="0" x2="10" y2="10" stroke="#4F6650" stroke-width="0.5"/>
+</svg>

@@ -43,9 +43,18 @@ def render_title_and_legend(
     legend_y = padding_y + 20 + title_gap + 4
     legend_x = padding_x
 
+    # Get color palette (extend if needed)
+    color_palette = [colors['primary'], colors['secondary'], colors['accent']]
+    # Add more colors if available
+    if 'quaternary' in colors:
+        color_palette.append(colors['quaternary'])
+    if 'quinary' in colors:
+        color_palette.append(colors['quinary'])
+
     for i, label in enumerate(labels):
         # Color box (20x10px with 2px border radius)
-        color = [colors['primary'], colors['secondary'], colors['accent']][i]
+        # Cycle through colors if we have more series than colors
+        color = color_palette[i % len(color_palette)]
         ET.SubElement(svg, 'rect', {
             'x': str(legend_x),
             'y': str(legend_y),

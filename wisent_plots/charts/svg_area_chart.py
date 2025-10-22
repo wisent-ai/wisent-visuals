@@ -48,7 +48,8 @@ class SVGAreaChart:
         x_data: List[float],
         y_series: List[List[float]],
         labels: List[str],
-        title: str = "Area Chart"
+        title: str = "Area Chart",
+        style_config: dict = None
     ) -> str:
         """Create SVG chart matching Figma design exactly.
 
@@ -57,6 +58,7 @@ class SVGAreaChart:
             y_series: List of Y-axis data series (will be stacked)
             labels: Labels for each series
             title: Chart title
+            style_config: Optional style configuration dict
 
         Returns:
             SVG string
@@ -95,7 +97,7 @@ class SVGAreaChart:
         # Render main area chart
         render_area_chart(
             svg, x_data, y_series, chart_x, chart_start_y,
-            self.chart_width, self.chart_height, self.colors
+            self.chart_width, self.chart_height, self.colors, style_config
         )
 
         # Convert to string

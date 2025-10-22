@@ -8,6 +8,10 @@ from matplotlib.axes import Axes
 import numpy as np
 
 from wisent_plots.styles.style_config import get_style
+from wisent_plots.charts.svg_area_chart import SVGAreaChart
+from wisent_plots.charts.svg_area_chart_gradient import SVGAreaChartGradient
+from wisent_plots.charts.svg_area_chart_pattern import SVGAreaChartPattern
+from wisent_plots.charts.svg_area_chart_2patterns import SVGAreaChart2Patterns
 
 
 class AreaChart:
@@ -27,7 +31,7 @@ class AreaChart:
 
     def __init__(
         self,
-        style: int = 1,
+        style: Union[int, str] = 1,
         edge: bool = False,
         stacked: bool = True,
         figsize: Tuple[float, float] = (10, 6),
@@ -36,18 +40,38 @@ class AreaChart:
         """Initialize an AreaChart with specified styling.
 
         Args:
-            style: Style number (1-5). Each style has different colors,
-                   fonts, and visual properties.
+            style: Style number (1-5) or style name ("solid", "gradient", etc.).
+                   Each style has different colors, fonts, and visual properties.
             edge: Whether to draw an edge around the filled area.
             stacked: Whether to stack areas on top of each other (True) or overlap (False).
             figsize: Figure size as (width, height) in inches.
             dpi: Dots per inch for the figure resolution.
 
         Raises:
-            ValueError: If style is not between 1 and 5.
+            ValueError: If style is not between 1 and 5 or not a recognized style name.
         """
-        self.style_config = get_style(style)
-        self.style_number = style
+        # Map style names to numbers
+        style_map = {
+            "solid": 1,
+            "gradient": 2,
+            "pattern": 3,
+            "2patterns": 4,
+            "minimal": 5,
+            "vibrant": 6,
+            "dark": 7,
+        }
+
+        # Convert style name to number if needed
+        if isinstance(style, str):
+            style_lower = style.lower()
+            if style_lower in style_map:
+                self.style_number = style_map[style_lower]
+            else:
+                raise ValueError(f"Unknown style name: {style}. Valid names are: {', '.join(style_map.keys())}")
+        else:
+            self.style_number = style
+
+        self.style_config = get_style(self.style_number)
         self.edge = edge
         self.stacked = stacked
         self.figsize = figsize
@@ -177,7 +201,8 @@ class AreaChart:
         ylabel: Optional[str] = None,
         fig: Optional[Figure] = None,
         ax: Optional[Axes] = None,
-    ) -> Tuple[Figure, Axes]:
+        output_format: str = 'svg',
+    ) -> Union[Tuple[Figure, Axes], str]:
         """Create an area chart with multiple data series.
 
         Args:
@@ -190,10 +215,48 @@ class AreaChart:
             ylabel: Y-axis label.
             fig: Existing figure to plot on. If None, creates new figure.
             ax: Existing axes to plot on. If None, creates new axes.
+            output_format: Output format - 'svg' for SVG string (style 1 + edge only),
+                          'matplotlib' for figure/axes tuple.
 
         Returns:
-            Tuple of (figure, axes) objects.
+            Tuple of (figure, axes) objects or SVG string depending on output_format and style.
         """
+        # Use SVG implementation for style=1 with edge=True
+        if self.style_number == 1 and self.edge and output_format == 'svg':
+            svg_chart = SVGAreaChart()
+            svg_string = svg_chart.create_chart(x, y_series, labels or [], title or "Area Chart")
+            return svg_string
+        # Use SVG gradient implementation for style=2 with edge=True
+        if self.style_number == 2 and self.edge and output_format == 'svg':
+            svg_chart = SVGAreaChartGradient()
+            svg_string = svg_chart.create_chart(x, y_series, labels or [], title or "Area Chart")
+            return svg_string
+        # Use SVG pattern implementation for style=3 with edge=True
+        if self.style_number == 3 and self.edge and output_format == 'svg':
+            svg_chart = SVGAreaChartPattern()
+            svg_string = svg_chart.create_chart(x, y_series, labels or [], title or "Area Chart")
+            return svg_string
+        # Use SVG 2 patterns implementation for style=4 with edge=True
+        if self.style_number == 4 and self.edge and output_format == 'svg':
+            svg_chart = SVGAreaChart2Patterns()
+            svg_string = svg_chart.create_chart(x, y_series, labels or [], title or "Area Chart")
+            return svg_string
+        # Use SVG solid colors implementation for style=5 with edge=True
+        if self.style_number == 5 and output_format == 'svg':
+            svg_chart = SVGAreaChart()
+            # Update colors to use solid colors from style 5
+            svg_chart.colors = {
+                'background': self.style_config['colors']['background'],
+                'title': self.style_config['colors']['text'],
+                'legend_text': self.style_config['colors']['legend_text'],
+                'grid': self.style_config['colors']['grid'],
+                'area': self.style_config['colors']['primary'],  # Fallback for compatibility
+                'primary': self.style_config['colors']['primary'],
+                'secondary': self.style_config['colors']['secondary'],
+                'accent': self.style_config['colors']['accent'],
+            }
+            svg_string = svg_chart.create_chart(x, y_series, labels or [], title or "Area Chart", self.style_config)
+            return svg_string
         # Create figure and axes if not provided
         if fig is None or ax is None:
             fig, ax = plt.subplots(figsize=self.figsize, dpi=self.dpi)
