@@ -84,17 +84,21 @@ class SVGAreaChartGradient:
             'ry': '20'
         })
 
-        # Render title and legend
-        chart_start_y = render_title_and_legend(
-            svg, title, labels, self.colors,
-            self.padding_x, self.padding_y, self.title_gap, self.chart_top_margin
+        # Define gradients FIRST (before rendering legend)
+        # Use a temporary chart_start_y for gradient positioning
+        temp_chart_start_y = self.padding_y + 20 + self.title_gap + 24 + self.chart_top_margin
+        self._create_gradients(svg, temp_chart_start_y)
+
+        # Render title and legend with gradients
+        chart_start_y = self._render_title_and_legend_with_gradients(
+            svg, title, labels
         )
 
         # Chart area coordinates
         chart_x = self.padding_x
         chart_height = self.height - self.padding_y - chart_start_y
 
-        # Define gradients
+        # Update gradients with actual chart position
         self._create_gradients(svg, chart_start_y)
 
         # Render area chart with gradients
@@ -106,6 +110,60 @@ class SVGAreaChartGradient:
 
         # Convert to string
         return ET.tostring(svg, encoding='unicode', method='xml')
+
+    def _render_title_and_legend_with_gradients(self, svg, title: str, labels: List[str]) -> int:
+        """Render title and legend with gradient fills matching the chart."""
+        # Title (20px, left-aligned at padding_x, padding_y)
+        title_elem = ET.SubElement(svg, 'text', {
+            'x': str(self.padding_x),
+            'y': str(self.padding_y + 20),
+            'fill': self.colors['title'],
+            'font-size': '20',
+            'font-weight': '400'
+        })
+        title_elem.text = title
+
+        # Legend - horizontal layout below title
+        legend_y = self.padding_y + 20 + self.title_gap + 4
+        legend_x = self.padding_x
+
+        # Gradient/fill mapping for each series (bottom to top in stacking order)
+        fills = [
+            'url(#grad-bottom)',  # Bottom band - lightest gradient
+            'url(#grad-middle)',  # Middle band - medium gradient
+            'url(#grad-top)'  # Top band - darkest gradient
+        ]
+
+        for i, label in enumerate(labels):
+            # Get fill (gradient or color) for this series
+            fill = fills[i] if i < len(fills) else self.colors['primary']
+
+            # Color box (20x10px with 2px border radius)
+            ET.SubElement(svg, 'rect', {
+                'x': str(legend_x),
+                'y': str(legend_y),
+                'width': '20',
+                'height': '10',
+                'fill': fill,
+                'rx': '2',
+                'ry': '2'
+            })
+
+            # Label text (14px, gap of 8px from box)
+            text = ET.SubElement(svg, 'text', {
+                'x': str(legend_x + 28),
+                'y': str(legend_y + 9),
+                'fill': self.colors['legend_text'],
+                'font-size': '14',
+                'font-weight': '400'
+            })
+            text.text = label
+
+            # Move to next legend item (gap of 20px between items)
+            legend_x += 20 + 8 + len(label) * 8 + 20
+
+        # Return chart start Y position
+        return self.padding_y + 20 + self.title_gap + 24 + self.chart_top_margin
 
     def _create_gradients(self, svg, chart_start_y):
         """Create SVG gradient definitions."""
