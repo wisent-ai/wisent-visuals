@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- Cross/grid pattern for bottom band -->
+  <!-- Base color - light mint green -->
+  <rect width="16" height="16" fill="#C5FFC8"/>
+
+  <!-- Vertical lines -->
+  <line x1="0" y1="0" x2="0" y2="16" stroke="#B0E8B3" stroke-width="0.8" opacity="0.5"/>
+  <line x1="8" y1="0" x2="8" y2="16" stroke="#B0E8B3" stroke-width="0.8" opacity="0.5"/>
+  <line x1="16" y1="0" x2="16" y2="16" stroke="#B0E8B3" stroke-width="0.8" opacity="0.5"/>
+
+  <!-- Horizontal lines to create crosses/grid -->
+  <line x1="0" y1="0" x2="16" y2="0" stroke="#B0E8B3" stroke-width="0.8" opacity="0.5"/>
+  <line x1="0" y1="8" x2="16" y2="8" stroke="#B0E8B3" stroke-width="0.8" opacity="0.5"/>
+  <line x1="0" y1="16" x2="16" y2="16" stroke="#B0E8B3" stroke-width="0.8" opacity="0.5"/>
+</svg>

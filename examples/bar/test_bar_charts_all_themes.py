@@ -2,9 +2,14 @@
 
 from wisent_plots.charts import BarChart
 
-# Sample data
+# Sample data - 3 series for stacked bar chart
 categories = ['Q1', 'Q2', 'Q3', 'Q4']
-values = [85, 92, 78, 95]
+series = [
+    [85, 92, 78, 95],
+    [65, 70, 82, 75],
+    [45, 58, 52, 60]
+]
+labels = ["One", "Two", "Three"]
 
 # All 5 style variations
 styles = [
@@ -31,16 +36,20 @@ for theme_folder, theme_name in themes:
 
         try:
             # Create bar chart
-            chart = BarChart(style=style_num, output_format='svg')
+            chart = BarChart(style=style_num)
             svg_string = chart.plot(
                 categories=categories,
-                values=values,
-                title="Bar Chart"
+                series=series,
+                labels=labels,
+                title="Bar Chart",
+                output_format='svg'
             )
 
             # Save to file
             filename = f'examples/bar/{theme_folder}/bar_chart_{theme_folder}_{style_name}.svg'
-            chart.save_svg(svg_string, filename)
+            with open(filename, 'w') as f:
+                f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+                f.write(svg_string)
             print(f"✓ Created: {filename}")
         except Exception as e:
             print(f"✗ Error creating {style_name}: {e}")

@@ -41,19 +41,22 @@ for theme_folder, theme_name in themes:
         print(f"\nCreating {style_desc} area chart...")
 
         # Create area chart
-        chart = AreaChart(style=style_num, output_format='svg')
+        chart = AreaChart(style=style_num, edge=True)
 
         try:
             svg_string = chart.plot_multiple(
                 x=months,
                 y_series=[series1, series2, series3],
                 labels=labels,
-                title="Area Chart"
+                title="Area Chart",
+                output_format='svg'
             )
 
             # Save to file
             filename = f'examples/area/{theme_folder}/area_chart_{theme_folder}_{style_name}.svg'
-            chart.save_svg(svg_string, filename)
+            with open(filename, 'w') as f:
+                f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+                f.write(svg_string)
             print(f"✓ Created: {filename}")
         except Exception as e:
             print(f"✗ Error creating {style_name}: {e}")
