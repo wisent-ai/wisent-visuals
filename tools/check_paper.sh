@@ -69,7 +69,10 @@ HARD "duplicate bib entries: $DUP" "$DUP"
 PLC=0
 for f in $(srcfiles); do
   [ -f "$f" ] || continue
-  n=$(awk '/XXX|\<TODO\>|\<TBD\>|placeholder|[Ll]orem ipsum|Rephrased:|\\cite\{\}|\\textbf\{\}/{c++}END{print c+0}' "$f")
+  n=$(awk '{ l=tolower($0); m=0;
+             if(l ~ /placeholder|lorem ipsum|rephrased:/) m=1;
+             if($0 ~ /XXX|\<TODO\>|\<TBD\>|FIXME|\\cite\{\}|\\textbf\{\}/) m=1;
+             if(m) c++ } END{print c+0}' "$f")
   PLC=$((PLC+n))
 done
 HARD "placeholder/fabrication markers: $PLC" "$PLC"
