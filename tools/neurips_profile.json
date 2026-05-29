@@ -1,7 +1,56 @@
 {
   "n_papers": 19,
-  "pages":   {"min": 14, "median": 25, "max": 73},
-  "figures": {"min": 2, "median": 9, "max": 34},
-  "tables":  {"min": 0, "median": 6, "max": 13},
-  "section_freq": {"related_work": 0.58, "experiments": 0.84, "ablation": 0.53, "limitations": 0.63, "conclusion": 0.58, "reproducibility": 0.21, "broader_impact": 0.05}
+  "pages": {
+    "min": 14,
+    "median": 25,
+    "max": 73
+  },
+  "main_body_pages": {
+    "min": 9,
+    "median": 10,
+    "max": 15
+  },
+  "back_matter_pages": {
+    "min": 5,
+    "median": 16,
+    "max": 64
+  },
+  "has_appendix_frac": 0.89,
+  "figures": {
+    "min": 2,
+    "median": 9,
+    "max": 34
+  },
+  "tables": {
+    "min": 0,
+    "median": 6,
+    "max": 13
+  },
+  "section_freq": {
+    "related_work": 0.58,
+    "experiments": 0.84,
+    "ablation": 0.53,
+    "limitations": 0.63,
+    "conclusion": 0.58,
+    "reproducibility": 0.21,
+    "broader_impact": 0.05
+  },
+  "section_words": {
+    "introduction": {
+      "median_words": 641,
+      "n": 16
+    },
+    "related_work": {
+      "median_words": 367,
+      "n": 10
+    },
+    "experiments": {
+      "median_words": 1180,
+      "n": 13
+    },
+    "conclusion": {
+      "median_words": 352,
+      "n": 18
+    }
+  }
 }

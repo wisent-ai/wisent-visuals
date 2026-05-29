@@ -41,27 +41,36 @@ PAGES=$(pdfinfo "$BASE.pdf" 2>/dev/null | awk '/^Pages/{print $2}'); PAGES=${PAG
 pdftotext "$BASE.pdf" "$BASE.__txt" 2>/dev/null
 FIGS=$(awk 'BEGIN{m=0}/^Figure [0-9]+[:.]/{n=$2+0;if(n>m)m=n}END{print m}' "$BASE.__txt" 2>/dev/null); FIGS=${FIGS:-0}
 TABS=$(awk 'BEGIN{m=0}/^Table [0-9]+[:.]/{n=$2+0;if(n>m)m=n}END{print m}' "$BASE.__txt" 2>/dev/null); TABS=${TABS:-0}
+# main-body pages = page where the References header starts (form-feed delimited,
+# de-spaced to handle letter-spaced "R EFERENCES"); same method as the profile.
+MBPAGES=$(awk 'BEGIN{pg=1;refpg=0}{n=gsub(/\f/,"\f");line=$0;gsub(/\f/,"",line);d=line;gsub(/ /,"",d);if(refpg==0&&tolower(d)=="references")refpg=pg;pg+=n}END{print (refpg>0?refpg:0)}' "$BASE.__txt" 2>/dev/null); MBPAGES=${MBPAGES:-0}
 rm -f "$BASE.__txt"
 REFS=$([ -f "$BASE.bbl" ] && awk '/\\bibitem/{c++}END{print c+0}' "$BASE.bbl" || echo 0)
 CITES=$(ALLSRC | awk '{while(match($0,/\\cite[a-z]*\{/)){c++;$0=substr($0,RSTART+RLENGTH)}}END{print c+0}')
+APPDX=$(ALLSRC | awk '/\\appendix([^a-zA-Z]|$)/{f=1} END{print f+0}')
 
-echo "== norm comparison (profile: $(g '.n_papers') award papers) =="
-echo "  target: pages=$PAGES figures=$FIGS tables=$TABS references=$REFS \\cite-calls=$CITES"
+echo "== structure vs award papers (profile: $(g '.n_papers') papers) =="
+echo "  target: total=${PAGES}pp main_body=${MBPAGES}pp figures=$FIGS tables=$TABS refs=$REFS cites=$CITES appendix=$([ "$APPDX" -gt 0 ] && echo yes || echo no)"
 
-# pages
-pmin=$(g '.pages.min'); pmax=$(g '.pages.max'); pmed=$(g '.pages.median')
-if [ "$PAGES" -lt "$pmin" ]; then ADV "pages ($PAGES) below award-paper range [$pmin-$pmax] (median $pmed) — likely under-developed"
-elif [ "$PAGES" -gt "$pmax" ]; then ADV "pages ($PAGES) above range [$pmin-$pmax] — unusually long"
-else OK "pages ($PAGES) within award-paper range [$pmin-$pmax]"; fi
+# main-body pages = the venue page limit, NOT the appendix-inflated total
+mbmin=$(g '.main_body_pages.min'); mbmax=$(g '.main_body_pages.max'); mbmed=$(g '.main_body_pages.median')
+if [ "$MBPAGES" -eq 0 ]; then ADV "no References section located — main-body length unmeasured"
+elif [ "$MBPAGES" -gt "$mbmax" ]; then ADV "main body ($MBPAGES pp) over award-paper max ($mbmax pp) — likely past the venue page limit; move material to the appendix"
+elif [ "$MBPAGES" -lt "$mbmin" ]; then ADV "main body ($MBPAGES pp) under award-paper min ($mbmin pp) — under-developed"
+else OK "main body ($MBPAGES pp) within award range [$mbmin-$mbmax], median $mbmed"; fi
+# appendix presence
+appf=$(g '.has_appendix_frac'); appp=$(awk -v k="$appf" 'BEGIN{print int(k*100)}')
+if [ "$APPDX" -gt 0 ]; then OK "appendix present (${appp}% of award papers have one)"
+else ADV "no \\appendix — ${appp}% of award papers include one (proofs, extra results, repro details)"; fi
 # figures
-fmin=$(g '.figures.min'); fmax=$(g '.figures.max'); fmed=$(g '.figures.median')
-if [ "$FIGS" -lt "$fmin" ]; then ADV "figures ($FIGS) below range [$fmin-$fmax] (median $fmed) — top papers are figure-rich"
+fmin=$(g '.figures.min'); fmed=$(g '.figures.median')
+if [ "$FIGS" -lt "$fmin" ]; then ADV "figures ($FIGS) below award-paper min ($fmin); median $fmed — top papers are figure-rich"
 else OK "figures ($FIGS) >= award-paper min ($fmin); median $fmed"; fi
 # tables
-tmin=$(g '.tables.min'); tmed=$(g '.tables.median')
+tmed=$(g '.tables.median')
 if [ "$TABS" -lt "$tmed" ]; then ADV "tables ($TABS) below award-paper median ($tmed)"
 else OK "tables ($TABS) >= award-paper median ($tmed)"; fi
-# references (fixed advisory bar; norms not scraped)
+# references (fixed advisory bar; PDF ref-count norms not scraped)
 if [ "$REFS" -lt 25 ]; then ADV "references ($REFS) is low — strong ML papers typically cite 30+ works"
 else OK "references ($REFS) >= 25"; fi
 
@@ -86,6 +95,34 @@ if printf '%s' "$LSRC" | awk '/github\.com|code is available|we release|reproduc
 else ADV "no reproducibility/code-availability statement found (github, 'we release', 'code is available')"; fi
 # claim density (very rough)
 if [ "$CITES" -lt 20 ]; then ADV "few in-text citations ($CITES \\cite calls) — claims may be under-grounded"; else OK "in-text citations: $CITES \\cite calls"; fi
+
+echo "== section lengths (target .tex \\section vs award-paper medians) =="
+# Per-section word counts from the source (main body before \appendix / back matter).
+# ROW = display line; BUK = canonical-bucket word count; SUM = main-body totals.
+SECT=$(ALLSRC | awk '
+  function bucket(n,  l){ l=tolower(n);
+    if(l ~ /introduction/) return "introduction";
+    if(l ~ /related|prior work/) return "related_work";
+    if(l ~ /experiment|empirical|evaluation|results/) return "experiments";
+    if(l ~ /conclusion|discussion/) return "conclusion"; return "" }
+  function endmain(n,  l){ l=tolower(n); return (l ~ /references|acknowledg|broader impact|author contribution|appendix|supplementary/) }
+  function flush(   b){ if(cur!=""){ printf "ROW\t%s\t%d\t%d\n", cur, w, inapp;
+      if(!inapp){ mainw+=w; if(w>mxw){mxw=w; mxs=cur}; b=bucket(cur); if(b!="") printf "BUK\t%s\t%d\n", b, w } } }
+  /\\appendix([^a-zA-Z]|$)/ { flush(); inapp=1; cur=""; w=0; next }
+  /\\section\*?\{/ { flush(); s=$0; match(s,/\\section\*?\{[^}]*\}/); h=substr(s,RSTART,RLENGTH); sub(/\\section\*?\{/,"",h); sub(/\}.*/,"",h); if(endmain(h)) inapp=1; cur=h; w=0; next }
+  cur!="" { t=$0; gsub(/%.*/,"",t); gsub(/\\[a-zA-Z]+\*?/,"",t); gsub(/[{}$&~^_]/," ",t); w+=split(t,a," ") }
+  END{ flush(); printf "SUM\t%d\t%d\t%s\n", mainw, mxw, mxs }')
+printf '%s\n' "$SECT" | awk -F'\t' '$1=="ROW"{ printf "  %-34.34s %5d words%s\n", $2, $3, ($4=="1"?"  [appendix/back-matter]":"") }'
+for b in introduction related_work experiments conclusion; do
+  med=$(g ".section_words.$b.median_words"); [ "$med" = "null" ] && continue
+  tw=$(printf '%s\n' "$SECT" | awk -F'\t' -v B="$b" '$1=="BUK"&&$2==B{s+=$3}END{print s+0}')
+  [ "$tw" -eq 0 ] && continue   # section absent -> already covered by expected-sections check
+  lbl=$(printf '%s' "$b" | tr '_' ' ')
+  if [ "$tw" -lt "$(( med / 2 ))" ]; then ADV "$lbl is short ($tw words vs award median $med) — likely needs expansion"
+  else OK "$lbl length $tw words (award median $med)"; fi
+done
+mainw=$(printf '%s\n' "$SECT" | awk -F'\t' '$1=="SUM"{print $2}'); mxw=$(printf '%s\n' "$SECT" | awk -F'\t' '$1=="SUM"{print $3}'); mxs=$(printf '%s\n' "$SECT" | awk -F'\t' '$1=="SUM"{print $4}')
+if [ "${mainw:-0}" -gt 0 ] && [ "$(( mxw * 2 ))" -gt "$mainw" ]; then ADV "one section (\"$mxs\", $mxw w) is >50% of the $mainw-word main body — consider rebalancing"; fi
 
 echo "== verdict =="
 if [ "$adv" -eq 0 ]; then echo "OK — consistent with top-venue norms (no advisories)"; exit 0
