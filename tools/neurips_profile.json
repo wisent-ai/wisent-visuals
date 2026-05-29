@@ -1,0 +1,7 @@
+{
+  "n_papers": 19,
+  "pages":   {"min": 14, "median": 25, "max": 73},
+  "figures": {"min": 2, "median": 9, "max": 34},
+  "tables":  {"min": 0, "median": 6, "max": 13},
+  "section_freq": {"related_work": 0.58, "experiments": 0.84, "ablation": 0.53, "limitations": 0.63, "conclusion": 0.58, "reproducibility": 0.21, "broader_impact": 0.05}
+}

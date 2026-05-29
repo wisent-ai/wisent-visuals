@@ -83,3 +83,6 @@ dmypy.json
 
 # Pyre
 .pyre/
+
+# NeurIPS norm-profile working corpus (regenerable via build_neurips_profile.sh)
+tools/.neurips_corpus/
