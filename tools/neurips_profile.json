@@ -37,20 +37,32 @@
   },
   "section_words": {
     "introduction": {
-      "median_words": 641,
-      "n": 16
+      "median_words": 661,
+      "n": 20
     },
     "related_work": {
-      "median_words": 367,
-      "n": 10
+      "median_words": 375,
+      "n": 15
     },
     "experiments": {
-      "median_words": 1180,
-      "n": 13
+      "median_words": 1336,
+      "n": 16
     },
     "conclusion": {
-      "median_words": 352,
-      "n": 18
+      "median_words": 264,
+      "n": 21
+    }
+  },
+  "appendix": {
+    "n_with_appendix": 19,
+    "median_sections": 5,
+    "median_words": 4901,
+    "component_freq": {
+      "proofs": 0.32,
+      "implementation_details": 0.47,
+      "additional_results": 0.68,
+      "reproducibility_checklist": 0.05,
+      "broader_impact": 0.05
     }
   }
 }

@@ -102,34 +102,63 @@ for pdf in "$WORK"/p*.pdf; do
   printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" "${pages:-0}" "${figs:-0}" "${tabs:-0}" "$rw" "$ex" "$ab" "$lim" "$concl" "$repro" "$impact" "${mb:-0}" "${bk:-0}" "${app:-0}" >> "$ROWS"
 done
 
-echo "== section words (arXiv source: \\section boundaries, main body only) =="
+echo "== section + appendix words (arXiv source: \\section boundaries) =="
 SECROWS="$WORK/secrows.tsv"; : > "$SECROWS"
+# Expand \input/\include IN PLACE (preserve order) so \appendix correctly splits
+# main body from appendix; appending includes at the end mis-segments papers that
+# \input their body sections (RSTART/RLENGTH captured into locals because nested
+# match() in emit() clobbers the globals). Two levels covers sections/all.tex.
+expand_tex(){ awk -v DIR="$2" '
+    function emit(fn,lvl,  path,l,rs,rl,t){ if(fn !~ /\.tex$/) fn=fn".tex"; path=DIR"/"fn;
+      while((getline l < path)>0){
+        if(lvl<2 && match(l,/\\(input|include)\{[^}]+\}/)){ rs=RSTART; rl=RLENGTH; printf "%s\n", substr(l,1,rs-1);
+          t=substr(l,rs,rl); sub(/^\\(input|include)\{/,"",t); sub(/\}.*/,"",t); emit(t,lvl+1); print substr(l,rs+rl) }
+        else print l }
+      close(path) }
+    /\\(input|include)\{[^}]+\}/ { line=$0;
+      while(match(line,/\\(input|include)\{[^}]+\}/)){ rs=RSTART; rl=RLENGTH; printf "%s\n", substr(line,1,rs-1);
+        t=substr(line,rs,rl); sub(/^\\(input|include)\{/,"",t); sub(/\}.*/,"",t); emit(t,1); line=substr(line,rs+rl) } print line; next }
+    { print }' "$1"; }
 for d in "$WORK"/p*.srcd; do
   [ -d "$d" ] || continue
   main=""
   for tx in "$d"/*.tex; do [ -f "$tx" ] || continue; if awk '/\\begin\{document\}/{f=1}END{exit !f}' "$tx"; then main="$tx"; break; fi; done
   [ -n "$main" ] || continue
-  { cat "$main"; awk '{s=$0;while(match(s,/\\(input|include)\{[^}]+\}/)){t=substr(s,RSTART,RLENGTH);sub(/^\\(input|include)\{/,"",t);sub(/\}$/,"",t);print t;s=substr(s,RSTART+RLENGTH)}}' "$main" \
-      | while read -r f; do [ "${f%.tex}" = "$f" ] && f="$f.tex"; [ -f "$d/$f" ] && cat "$d/$f"; done; } | \
-  awk '
-    function bucket(n,  l){ l=tolower(n);
+  expand_tex "$main" "$d" | awk '
+    function mbucket(n,  l){ l=tolower(n);
       if(l ~ /introduction/) return "introduction";
       if(l ~ /related|prior work/) return "related_work";
       if(l ~ /experiment|empirical|evaluation|results/) return "experiments";
-      if(l ~ /conclusion|discussion/) return "conclusion";
-      return "" }
-    function endmain(n,  l){ l=tolower(n); return (l ~ /references|acknowledg|broader impact|author contribution|appendix|supplementary/) }
-    function flush(   b){ if(cur!=""&&!inapp){ b=bucket(cur); if(b!="") print b"\t"w } }
-    /\\appendix([^a-zA-Z]|$)/ { flush(); inapp=1; cur=""; w=0; next }
-    /\\section\*?\{/ { flush(); s=$0; match(s,/\\section\*?\{[^}]*\}/); h=substr(s,RSTART,RLENGTH); sub(/\\section\*?\{/,"",h); sub(/\}.*/,"",h); if(endmain(h)) inapp=1; cur=h; w=0; next }
-    cur!=""&&!inapp { t=$0; gsub(/%.*/,"",t); gsub(/\\[a-zA-Z]+\*?/,"",t); gsub(/[{}$&~^_]/," ",t); w+=split(t,a," ") }
-    END{ flush() }' >> "$SECROWS"
+      if(l ~ /conclusion|discussion/) return "conclusion"; return "" }
+    function abucket(n,  l){ l=tolower(n);
+      if(l ~ /proof|derivation|lemma|theorem/) return "proofs";
+      if(l ~ /implementation|experimental detail|training detail|hyperparam|setup|architecture/) return "implementation_details";
+      if(l ~ /additional|extended|further|qualitative|more result|ablation/) return "additional_results";
+      if(l ~ /reproducib|checklist/) return "reproducibility_checklist";
+      if(l ~ /broader impact|societal|ethic/) return "broader_impact"; return "" }
+    function isapp(n,  l){ l=tolower(n); return (l ~ /^appendix|supplementary/) }
+    function isback(n,  l){ l=tolower(n); return (l ~ /references|acknowledg|author contribution/) }
+    function flush(   b,c){ if(cur!=""){
+        if(!inapp){ b=mbucket(cur); if(b!="") print "BUK\t"b"\t"w }
+        else if(appmode){ acount++; awords+=w; c=abucket(cur); if(c!=""&&!seen[c]){seen[c]=1; print "APXC\t"c} } } }
+    /\\appendix([^a-zA-Z]|$)/ { flush(); inapp=1; appmode=1; cur=""; w=0; next }
+    /\\section\*?\{/ { flush(); s=$0; match(s,/\\section\*?\{[^}]*\}/); h=substr(s,RSTART,RLENGTH); sub(/\\section\*?\{/,"",h); sub(/\}.*/,"",h);
+      if(isapp(h)){appmode=1; inapp=1} else if(isback(h)){inapp=1} cur=h; w=0; next }
+    cur!="" { t=$0; gsub(/%.*/,"",t); gsub(/\\[a-zA-Z]+\*?/,"",t); gsub(/[{}$&~^_]/," ",t); w+=split(t,a," ") }
+    END{ flush(); if(acount>0) print "APXS\t"acount"\t"awords }' >> "$SECROWS"
 done
-medb(){ awk -F'\t' -v B="$1" '$1==B{a[++n]=$2} END{ for(i=1;i<=n;i++)for(j=i+1;j<=n;j++)if(a[j]<a[i]){t=a[i];a[i]=a[j];a[j]=t} print (n?((n%2)?a[int(n/2)+1]:int((a[n/2]+a[n/2+1])/2)):0)" "(n+0) }' "$SECROWS"; }
+medb(){ awk -F'\t' -v B="$1" '$1=="BUK"&&$2==B{a[++n]=$3} END{ for(i=1;i<=n;i++)for(j=i+1;j<=n;j++)if(a[j]<a[i]){t=a[i];a[i]=a[j];a[j]=t} print (n?((n%2)?a[int(n/2)+1]:int((a[n/2]+a[n/2+1])/2)):0)" "(n+0) }' "$SECROWS"; }
 xi=$(medb introduction); xr=$(medb related_work); xe=$(medb experiments); xc=$(medb conclusion)
 SECJSON=$(printf '{"introduction":{"median_words":%s,"n":%s},"related_work":{"median_words":%s,"n":%s},"experiments":{"median_words":%s,"n":%s},"conclusion":{"median_words":%s,"n":%s}}' \
   "${xi% *}" "${xi#* }" "${xr% *}" "${xr#* }" "${xe% *}" "${xe#* }" "${xc% *}" "${xc#* }")
-echo "  $SECJSON"
+napx=$(awk -F'\t' '$1=="APXS"{n++}END{print n+0}' "$SECROWS")
+medcol(){ awk -F'\t' -v C="$1" '$1=="APXS"{a[++n]=$C} END{ for(i=1;i<=n;i++)for(j=i+1;j<=n;j++)if(a[j]<a[i]){t=a[i];a[i]=a[j];a[j]=t} print (n?((n%2)?a[int(n/2)+1]:int((a[n/2]+a[n/2+1])/2)):0) }' "$SECROWS"; }
+asec=$(medcol 2); awrd=$(medcol 3)
+cfreq(){ awk -F'\t' -v C="$1" -v N="$napx" '$1=="APXC"&&$2==C{c++} END{printf "%.2f", (N>0?c/N:0)}' "$SECROWS"; }
+APXJSON=$(printf '{"n_with_appendix":%s,"median_sections":%s,"median_words":%s,"component_freq":{"proofs":%s,"implementation_details":%s,"additional_results":%s,"reproducibility_checklist":%s,"broader_impact":%s}}' \
+  "${napx:-0}" "${asec:-0}" "${awrd:-0}" "$(cfreq proofs)" "$(cfreq implementation_details)" "$(cfreq additional_results)" "$(cfreq reproducibility_checklist)" "$(cfreq broader_impact)")
+echo "  sections: $SECJSON"
+echo "  appendix: $APXJSON"
 
 N=$(awk 'END{print NR+0}' "$ROWS")
 echo "== aggregating $N parsed papers -> $OUT =="
@@ -151,5 +180,5 @@ awk -v n="$N" '
            rw/NR, ex/NR, ab/NR, lim/NR, cc/NR, rp/NR, im/NR
     printf "}\n"
   }' "$ROWS" > "$OUT.tmp"
-jq --argjson sw "$SECJSON" '. + {section_words: $sw}' "$OUT.tmp" > "$OUT" && rm -f "$OUT.tmp"
+jq --argjson sw "$SECJSON" --argjson ax "$APXJSON" '. + {section_words: $sw, appendix: $ax}' "$OUT.tmp" > "$OUT" && rm -f "$OUT.tmp"
 cat "$OUT"

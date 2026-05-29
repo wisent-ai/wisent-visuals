@@ -28,6 +28,19 @@ g(){ jq -r "$1" "$PROFILE"; }   # read a profile value
 
 srcfiles(){ echo "$BASE.tex"; awk '{s=$0; while(match(s,/\\(input|include)\{[^}]+\}/)){t=substr(s,RSTART,RLENGTH);sub(/^\\(input|include)\{/,"",t);sub(/\}$/,"",t);if(t!~/\.tex$/)t=t".tex";print t;s=substr(s,RSTART+RLENGTH)}}' "$BASE.tex" 2>/dev/null; }
 ALLSRC(){ for f in $(srcfiles); do [ -f "$f" ] && cat "$f"; done; }
+# Expand \input/\include IN PLACE (preserve order) so \appendix correctly splits
+# main body from appendix. RSTART/RLENGTH captured to locals (nested match clobbers).
+expand_tex(){ awk -v DIR="$2" '
+    function emit(fn,lvl,  path,l,rs,rl,t){ if(fn !~ /\.tex$/) fn=fn".tex"; path=DIR"/"fn;
+      while((getline l < path)>0){
+        if(lvl<2 && match(l,/\\(input|include)\{[^}]+\}/)){ rs=RSTART; rl=RLENGTH; printf "%s\n", substr(l,1,rs-1);
+          t=substr(l,rs,rl); sub(/^\\(input|include)\{/,"",t); sub(/\}.*/,"",t); emit(t,lvl+1); print substr(l,rs+rl) }
+        else print l }
+      close(path) }
+    /\\(input|include)\{[^}]+\}/ { line=$0;
+      while(match(line,/\\(input|include)\{[^}]+\}/)){ rs=RSTART; rl=RLENGTH; printf "%s\n", substr(line,1,rs-1);
+        t=substr(line,rs,rl); sub(/^\\(input|include)\{/,"",t); sub(/\}.*/,"",t); emit(t,1); line=substr(line,rs+rl) } print line; next }
+    { print }' "$1"; }
 
 echo "== build $BASE.tex =="
 rm -f "$BASE.aux" "$BASE.bbl" "$BASE.blg" "$BASE.log" 2>/dev/null
@@ -97,22 +110,32 @@ else ADV "no reproducibility/code-availability statement found (github, 'we rele
 if [ "$CITES" -lt 20 ]; then ADV "few in-text citations ($CITES \\cite calls) — claims may be under-grounded"; else OK "in-text citations: $CITES \\cite calls"; fi
 
 echo "== section lengths (target .tex \\section vs award-paper medians) =="
-# Per-section word counts from the source (main body before \appendix / back matter).
-# ROW = display line; BUK = canonical-bucket word count; SUM = main-body totals.
-SECT=$(ALLSRC | awk '
-  function bucket(n,  l){ l=tolower(n);
+# Per-section word counts from the source (in-place \input expansion so the
+# \appendix boundary is correct). ROW=display; BUK=main canonical bucket;
+# ACOMP=appendix component; SUM=main-body totals; ASUM=appendix totals.
+SECT=$(expand_tex "$BASE.tex" "$DIR" | awk '
+  function mbucket(n,  l){ l=tolower(n);
     if(l ~ /introduction/) return "introduction";
     if(l ~ /related|prior work/) return "related_work";
     if(l ~ /experiment|empirical|evaluation|results/) return "experiments";
     if(l ~ /conclusion|discussion/) return "conclusion"; return "" }
-  function endmain(n,  l){ l=tolower(n); return (l ~ /references|acknowledg|broader impact|author contribution|appendix|supplementary/) }
-  function flush(   b){ if(cur!=""){ printf "ROW\t%s\t%d\t%d\n", cur, w, inapp;
-      if(!inapp){ mainw+=w; if(w>mxw){mxw=w; mxs=cur}; b=bucket(cur); if(b!="") printf "BUK\t%s\t%d\n", b, w } } }
-  /\\appendix([^a-zA-Z]|$)/ { flush(); inapp=1; cur=""; w=0; next }
-  /\\section\*?\{/ { flush(); s=$0; match(s,/\\section\*?\{[^}]*\}/); h=substr(s,RSTART,RLENGTH); sub(/\\section\*?\{/,"",h); sub(/\}.*/,"",h); if(endmain(h)) inapp=1; cur=h; w=0; next }
+  function acomp(n,  l){ l=tolower(n);
+    if(l ~ /proof|derivation|lemma|theorem/) return "proofs";
+    if(l ~ /implementation|experimental detail|training detail|hyperparam|setup|architecture/) return "implementation_details";
+    if(l ~ /additional|extended|further|qualitative|more result|ablation/) return "additional_results";
+    if(l ~ /reproducib|checklist/) return "reproducibility_checklist";
+    if(l ~ /broader impact|societal|ethic/) return "broader_impact"; return "" }
+  function isapp(n,  l){ l=tolower(n); return (l ~ /^appendix|supplementary/) }
+  function isback(n,  l){ l=tolower(n); return (l ~ /references|acknowledg|author contribution/) }
+  function flush(   b,c){ if(cur!=""){
+      printf "ROW\t%s\t%d\t%d\n", cur, w, (appmode?2:(inapp?1:0));
+      if(!inapp){ mainw+=w; if(w>mxw){mxw=w; mxs=cur}; b=mbucket(cur); if(b!="") printf "BUK\t%s\t%d\n", b, w }
+      else if(appmode){ acount++; awords+=w; c=acomp(cur); if(c!=""&&!seen[c]){seen[c]=1; printf "ACOMP\t%s\n", c} } } }
+  /\\appendix([^a-zA-Z]|$)/ { flush(); inapp=1; appmode=1; cur=""; w=0; next }
+  /\\section\*?\{/ { flush(); s=$0; match(s,/\\section\*?\{[^}]*\}/); h=substr(s,RSTART,RLENGTH); sub(/\\section\*?\{/,"",h); sub(/\}.*/,"",h); if(isapp(h)){appmode=1;inapp=1} else if(isback(h)){inapp=1} cur=h; w=0; next }
   cur!="" { t=$0; gsub(/%.*/,"",t); gsub(/\\[a-zA-Z]+\*?/,"",t); gsub(/[{}$&~^_]/," ",t); w+=split(t,a," ") }
-  END{ flush(); printf "SUM\t%d\t%d\t%s\n", mainw, mxw, mxs }')
-printf '%s\n' "$SECT" | awk -F'\t' '$1=="ROW"{ printf "  %-34.34s %5d words%s\n", $2, $3, ($4=="1"?"  [appendix/back-matter]":"") }'
+  END{ flush(); printf "SUM\t%d\t%d\t%s\n", mainw, mxw, mxs; printf "ASUM\t%d\t%d\n", acount, awords }')
+printf '%s\n' "$SECT" | awk -F'\t' '$1=="ROW"{ tag=($4=="2"?"  [appendix]":($4=="1"?"  [back-matter]":"")); printf "  %-34.34s %5d words%s\n", $2, $3, tag }'
 for b in introduction related_work experiments conclusion; do
   med=$(g ".section_words.$b.median_words"); [ "$med" = "null" ] && continue
   tw=$(printf '%s\n' "$SECT" | awk -F'\t' -v B="$b" '$1=="BUK"&&$2==B{s+=$3}END{print s+0}')
@@ -123,6 +146,19 @@ for b in introduction related_work experiments conclusion; do
 done
 mainw=$(printf '%s\n' "$SECT" | awk -F'\t' '$1=="SUM"{print $2}'); mxw=$(printf '%s\n' "$SECT" | awk -F'\t' '$1=="SUM"{print $3}'); mxs=$(printf '%s\n' "$SECT" | awk -F'\t' '$1=="SUM"{print $4}')
 if [ "${mainw:-0}" -gt 0 ] && [ "$(( mxw * 2 ))" -gt "$mainw" ]; then ADV "one section (\"$mxs\", $mxw w) is >50% of the $mainw-word main body — consider rebalancing"; fi
+
+echo "== appendix vs award papers =="
+asec=$(printf '%s\n' "$SECT" | awk -F'\t' '$1=="ASUM"{print $2}'); awrd=$(printf '%s\n' "$SECT" | awk -F'\t' '$1=="ASUM"{print $3}')
+amsec=$(g '.appendix.median_sections'); amwrd=$(g '.appendix.median_words')
+if [ "${asec:-0}" -eq 0 ]; then ADV "no appendix detected — award papers carry one (median $amsec sections, ~$amwrd words)"
+else OK "appendix: ${asec} sections, ${awrd} words (award median $amsec sections, ~$amwrd words)"; fi
+for c in additional_results implementation_details proofs reproducibility_checklist broader_impact; do
+  freq=$(g ".appendix.component_freq.$c"); pct=$(awk -v k="$freq" 'BEGIN{print int(k*100)}')
+  have=$(printf '%s\n' "$SECT" | awk -F'\t' -v C="$c" '$1=="ACOMP"&&$2==C{f=1}END{print f+0}')
+  lbl=$(printf '%s' "$c" | tr '_' ' ')
+  if [ "$have" -gt 0 ]; then OK "appendix has $lbl (${pct}% of award papers do)"
+  elif [ "$pct" -ge 50 ]; then ADV "appendix lacks $lbl — ${pct}% of award papers include it"; fi
+done
 
 echo "== verdict =="
 if [ "$adv" -eq 0 ]; then echo "OK — consistent with top-venue norms (no advisories)"; exit 0
