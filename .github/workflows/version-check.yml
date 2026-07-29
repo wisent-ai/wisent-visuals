@@ -115,6 +115,22 @@ jobs:
               ;;
           esac
 
+          # Positive control, before either assertion. Both directions below read PyPI's
+          # answer through whether curl SUCCEEDS, and curl fails identically on a
+          # not-found response, on no egress, and on PyPI being down. Untreated that is a
+          # fail-open in the reverse direction specifically: absence is inferred from a
+          # failed request, so the step would conclude "nothing is published, the baseline
+          # is honest" exactly when it learned nothing — and the uninformed answer is the
+          # passing one. Prove the registry is reachable first, against a project that will
+          # not disappear. This also makes the forward message truthful: past this point a
+          # missing version really does mean PyPI does not serve it, rather than "we could
+          # not ask".
+          if ! curl -sSf "https://pypi.org/pypi/pip/json" >/dev/null; then
+            echo "::error::cannot reach PyPI, so nothing can be concluded about whether" \
+              "wisent-visuals is published. Refusing rather than guessing."
+            false
+          fi
+
           if [ "$claims_registry" = yes ]; then
             if ! curl -sSf "https://pypi.org/pypi/wisent-visuals/$released/json" >/dev/null; then
               echo "::error::released-surface.json claims $marker, but PyPI does not serve" \
