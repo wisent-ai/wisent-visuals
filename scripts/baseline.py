@@ -74,20 +74,32 @@ def registry() -> dict:
         ) from error
 
 
-def published(data: dict) -> tuple:
+def published(data: dict, prefer_wheel: bool = False) -> tuple:
     """The latest published version and the best artifact available for it.
 
     `info.version` is what PyPI itself calls the current release, so this cannot drift
     from the registry the way re-deriving an ordering locally could.
+
+    `prefer_wheel` inverts the tier preference. It exists for one job, and not for
+    producing a baseline: a wheel reader nobody has run is a liability, because a layout
+    it mishandles yields a *shorter* surface and the rule reads a short surface as removed
+    capability. This release publishes both an sdist and a pure-Python wheel, so the two
+    readers can be made to disagree out loud instead of being trusted. See --cross-check.
     """
     version = data["info"]["version"]
     files = data["releases"].get(version, [])
-    for candidate in files:
-        if candidate["packagetype"] == "sdist":
-            return version, SDIST_MARKER, candidate
-    for candidate in files:
-        if candidate["filename"].endswith(PURE_WHEEL):
-            return version, WHEEL_MARKER, candidate
+    tiers = [(WHEEL_MARKER, PURE_WHEEL), (SDIST_MARKER, None)]
+    if not prefer_wheel:
+        tiers.reverse()
+    for marker, suffix in tiers:
+        for candidate in files:
+            matched = (
+                candidate["filename"].endswith(suffix)
+                if suffix
+                else candidate["packagetype"] == "sdist"
+            )
+            if matched:
+                return version, marker, candidate
     raise SystemExit(
         f"{PROJECT} {version} is published but offers neither an sdist nor a pure-Python "
         f"wheel: {[candidate['filename'] for candidate in files]}. The tier needed here "
@@ -143,11 +155,9 @@ def extract(scripts: pathlib.Path, root: pathlib.Path) -> list:
     return json.loads(result.stdout)["surface"]
 
 
-def main(argv: list) -> int:
-    scripts = pathlib.Path(__file__).resolve().parent
-    repository = scripts.parent
-
-    version, marker, artifact = published(registry())
+def recover(scripts: pathlib.Path, repository: pathlib.Path, prefer_wheel: bool) -> tuple:
+    """Download the best published artifact and read its surface, leaving nothing behind."""
+    version, marker, artifact = published(registry(), prefer_wheel)
     payload = fetch(artifact["url"])
 
     workspace = repository / ".baseline-artifact"
@@ -161,6 +171,55 @@ def main(argv: list) -> int:
         for path in sorted(workspace.rglob("*"), reverse=True):
             path.rmdir() if path.is_dir() else path.unlink()
         workspace.rmdir()
+    return version, marker, artifact, names
+
+
+def cross_check(scripts: pathlib.Path, repository: pathlib.Path) -> int:
+    """Make the sdist and wheel readers agree, or say exactly where they differ.
+
+    An artifact reader is only trustworthy once it has been contradicted and survived.
+    Both tiers describe the same release, so any difference is a bug in one reader, and
+    the dangerous direction is a reader that returns *fewer* names: the shared rule scores
+    a short surface as removed capability.
+    """
+    sdist_version, sdist_marker, _, from_sdist = recover(scripts, repository, False)
+    wheel_version, wheel_marker, _, from_wheel = recover(scripts, repository, True)
+
+    if sdist_marker == wheel_marker:
+        raise SystemExit(
+            f"only the {sdist_marker} tier exists for {PROJECT} {sdist_version}, so there "
+            "is nothing to cross-check against"
+        )
+    if sdist_version != wheel_version:
+        raise SystemExit(f"tiers disagree on the version: {sdist_version}, {wheel_version}")
+
+    only_sdist = sorted(set(from_sdist) - set(from_wheel))
+    only_wheel = sorted(set(from_wheel) - set(from_sdist))
+    print(f"{sdist_marker}: {len(from_sdist)} names")
+    print(f"{wheel_marker}: {len(from_wheel)} names")
+    if only_sdist or only_wheel:
+        for name in only_sdist:
+            print(f"  only in {sdist_marker}: {name}")
+        for name in only_wheel:
+            print(f"  only in {wheel_marker}: {name}")
+        raise SystemExit(
+            "the two readers disagree about the same release, so at least one of them is "
+            "wrong and neither can be trusted to produce a baseline"
+        )
+    print(f"both tiers agree on {PROJECT} {sdist_version}")
+    return int(False)
+
+
+def main(argv: list) -> int:
+    scripts = pathlib.Path(__file__).resolve().parent
+    repository = scripts.parent
+
+    if "--cross-check" in argv:
+        return cross_check(scripts, repository)
+
+    version, marker, artifact, names = recover(
+        scripts, repository, "--prefer-wheel" in argv
+    )
 
     document = {
         "version": version,
