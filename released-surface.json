@@ -1,6 +1,6 @@
 {
   "version": "0.1.0",
-  "source": "sdist published on PyPI: wisent_visuals-0.1.0.tar.gz, unpacked and read with scripts/surface.py",
+  "source": "pypi-sdist:wisent_visuals-0.1.0.tar.gz — latest version served by PyPI for wisent-visuals, downloaded and read with scripts/surface.py; regenerate with scripts/baseline.py",
   "surface": [
     "wisent_plots.charts:AreaChart",
     "wisent_plots.charts:AreaChart.plot",

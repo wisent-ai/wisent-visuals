@@ -87,16 +87,47 @@ jobs:
             echo "Declared version matches the $change change."
           fi
 
-      - name: Refuse a baseline nobody can install
+      - name: Hold the baseline to what it claims about itself
         if: github.ref == 'refs/heads/main'
         run: |
           set -euo pipefail
-          # released-surface.json must describe a *published* version. If it names one
-          # PyPI does not have, the baseline was hand-edited and every later comparison
-          # is measured against something nobody can install.
+          # released-surface.json must describe an artifact somebody can install, and the
+          # claim is machine-readable: the first token of "source" is a provenance marker
+          # written by scripts/baseline.py. The assertion runs both ways, because both
+          # directions are a real failure. Forward: a baseline claiming a registry
+          # artifact must be served by that registry, or it was hand-edited and every
+          # later comparison is measured against something nobody can install. Reverse: a
+          # baseline claiming nothing is published must not be contradicted by the
+          # registry, or it is dodging a real release and calling shipped capability
+          # unreleased.
           released="$(jq -r .version released-surface.json)"
-          if ! curl -sSf "https://pypi.org/pypi/wisent-visuals/$released/json" >/dev/null; then
-            echo "::error::released-surface.json names $released, which is not on PyPI."
-            false
+          marker="$(jq -r '.source | split(" ") | first' released-surface.json)"
+          echo "baseline: $released"
+          echo "marker:   $marker"
+
+          case "$marker" in
+            pypi-*) claims_registry=yes ;;
+            stado:*|git-archive:*|head:*) claims_registry=no ;;
+            *)
+              echo "::error::unknown baseline marker: $marker. scripts/baseline.py writes" \
+                "the marker; released-surface.json was edited by something else."
+              false
+              ;;
+          esac
+
+          if [ "$claims_registry" = yes ]; then
+            if ! curl -sSf "https://pypi.org/pypi/wisent-visuals/$released/json" >/dev/null; then
+              echo "::error::released-surface.json claims $marker, but PyPI does not serve" \
+                "wisent-visuals $released. Regenerate it with scripts/baseline.py."
+              false
+            fi
+            echo "PyPI serves the $released artifact this baseline claims."
+          else
+            if curl -sSf "https://pypi.org/pypi/wisent-visuals/json" >/dev/null; then
+              echo "::error::released-surface.json claims $marker, i.e. nothing published," \
+                "but PyPI does serve wisent-visuals. The baseline is dodging a real" \
+                "release. Regenerate it with scripts/baseline.py."
+              false
+            fi
+            echo "Nothing published, as the $marker baseline claims."
           fi
-          echo "Baseline $released exists on PyPI."
