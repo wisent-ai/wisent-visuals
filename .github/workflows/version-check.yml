@@ -1,0 +1,102 @@
+name: Version check
+
+# Refuse a change whose declared version disagrees with what it did to the public
+# contract. The contract of this library is what a caller can import and call: the names
+# each module puts in __all__, the public methods of the classes it exports, and the keys
+# of the style registry it exports. scripts/surface.py explains why that is the set.
+#
+# The rule itself lives in one place for the whole fleet and is not copied here:
+# https://github.com/lbartoszcze/AutoVersion. This workflow supplies only the two
+# things this repository alone knows: its surface, and the version it declares.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  version-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install the shared rule
+        run: pip install --quiet "git+https://github.com/lbartoszcze/AutoVersion@v0.1.0"
+
+      - name: Read the public surface
+        # No package dependencies: the surface is read from the source with ast, so this
+        # stays cheap and cannot be broken by an unrelated dependency. A module that does
+        # not parse, or an __all__ that is not a literal list, fails the step rather than
+        # silently shrinking the surface.
+        run: python3 scripts/surface.py > "$RUNNER_TEMP/candidate.json"
+
+      - name: Agree with yourself about the version
+        # This package states its version twice: pyproject.toml is what PyPI publishes,
+        # wisent_plots/__init__.py is what callers read at runtime. Bumping one and not
+        # the other ships an artifact that misreports itself, and every later comparison
+        # would be measured against a version that never existed under that name.
+        run: |
+          set -euo pipefail
+          declared="$(awk -F'"' '/^version = /{print $2; exit}' pyproject.toml)"
+          runtime="$(awk -F'"' '/^__version__ = /{print $2; exit}' wisent_plots/__init__.py)"
+          if [ -z "$declared" ]; then
+            echo "::error::pyproject.toml declares no version."
+            false
+          fi
+          if [ "$declared" != "$runtime" ]; then
+            echo "::error::pyproject.toml declares $declared but" \
+              "wisent_plots/__init__.py reports __version__ = $runtime."
+            false
+          fi
+          echo "Both declarations agree on $declared."
+
+      - name: Compare against the released contract
+        run: |
+          set -euo pipefail
+          released="$(jq -r .version released-surface.json)"
+          declared="$(awk -F'"' '/^version = /{print $2; exit}' pyproject.toml)"
+          echo "released: $released"
+          echo "declared: $declared"
+
+          verdict="$(autoversion decide \
+            --current "$released" \
+            --published-surface released-surface.json \
+            --candidate-surface "$RUNNER_TEMP/candidate.json" \
+            --json)"
+          echo "$verdict"
+
+          change="$(printf '%s' "$verdict" | jq -r .change)"
+          required="$(printf '%s' "$verdict" | jq -r .next)"
+
+          if [ "$declared" = "$released" ]; then
+            if [ "$change" != "internal" ]; then
+              echo "::error::The public contract changed ($change) but pyproject.toml still" \
+                "declares the released version $released. The next version must be $required."
+              false
+            fi
+            echo "Nothing new to release and the contract is unchanged."
+          elif [ "$declared" != "$required" ]; then
+            echo "::error::pyproject.toml declares $declared, but a $change change to" \
+              "$released requires $required."
+            false
+          else
+            echo "Declared version matches the $change change."
+          fi
+
+      - name: Refuse a baseline nobody can install
+        if: github.ref == 'refs/heads/main'
+        run: |
+          set -euo pipefail
+          # released-surface.json must describe a *published* version. If it names one
+          # PyPI does not have, the baseline was hand-edited and every later comparison
+          # is measured against something nobody can install.
+          released="$(jq -r .version released-surface.json)"
+          if ! curl -sSf "https://pypi.org/pypi/wisent-visuals/$released/json" >/dev/null; then
+            echo "::error::released-surface.json names $released, which is not on PyPI."
+            false
+          fi
+          echo "Baseline $released exists on PyPI."
