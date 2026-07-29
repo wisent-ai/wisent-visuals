@@ -122,6 +122,25 @@ jobs:
               false
             fi
             echo "PyPI serves the $released artifact this baseline claims."
+
+            # Being honest about the artifact is not the same as being on the CURRENT
+            # one. PyPI serves old releases forever, so the check above keeps passing
+            # after a newer version ships: the baseline stays pinned to the superseded
+            # release, and every later decision is measured against a contract that is
+            # no longer the released one. The marker stays truthful throughout, which is
+            # exactly why the bidirectional check cannot notice. `info.version` is the
+            # same source of truth scripts/baseline.py resolves to pick its artifact, so
+            # this asserts the committed file still agrees with it — it regenerates
+            # nothing and lets no recomputed surface near the decision.
+            latest="$(curl -sSf "https://pypi.org/pypi/wisent-visuals/json" | jq -r .info.version)"
+            if [ "$released" != "$latest" ]; then
+              echo "::error::released-surface.json is pinned to $released, but PyPI now" \
+                "serves $latest as the latest release of wisent-visuals. The baseline is a" \
+                "superseded artifact, so every comparison is measured against a contract" \
+                "that is no longer the released one. Regenerate with scripts/baseline.py."
+              false
+            fi
+            echo "Baseline $released is still the latest release."
           else
             if curl -sSf "https://pypi.org/pypi/wisent-visuals/json" >/dev/null; then
               echo "::error::released-surface.json claims $marker, i.e. nothing published," \

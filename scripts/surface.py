@@ -32,10 +32,11 @@ disappearing:
 Deliberately excluded: the per-class `style_map` aliases ("solid", "gradient", ...) that
 each chart's `__init__` defines as a function-local. They read like a contract but are not
 a trustworthy one — `AreaChart`'s map offers "vibrant" and "dark", which resolve to style
-numbers 6 and 7 that `STYLES` does not contain, so those two aliases raise `KeyError`
-rather than draw anything. Putting them in the surface would promise capabilities that do
-not exist, and later deleting the broken aliases would be scored as a breaking removal
-when it is a bugfix. The numeric keys above are the honest form of the same promise.
+numbers 6 and 7 that `STYLES` does not contain, so `get_style` rejects those two aliases
+with `ValueError: Style 6 not found` rather than drawing anything. Putting them in the
+surface would promise capabilities that do not exist, and later deleting the broken
+aliases would be scored as a breaking removal when it is a bugfix. The numeric keys above
+are the honest form of the same promise.
 
 Excluded for the same reason: the `theme` values ('brand', 'black', 'white') that
 `BarChart` and `ColumnChart` check against a list literal inside their own `__init__`.
