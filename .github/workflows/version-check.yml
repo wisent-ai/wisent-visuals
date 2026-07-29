@@ -115,40 +115,68 @@ jobs:
               ;;
           esac
 
-          # Positive control, before either assertion. Both directions below read PyPI's
-          # answer through whether curl SUCCEEDS, and curl fails identically on a
-          # not-found response, on no egress, and on PyPI being down. Untreated that is a
-          # fail-open in the reverse direction specifically: absence is inferred from a
-          # failed request, so the step would conclude "nothing is published, the baseline
-          # is honest" exactly when it learned nothing — and the uninformed answer is the
-          # passing one. Prove the registry is reachable first, against a project that will
-          # not disappear. This also makes the forward message truthful: past this point a
-          # missing version really does mean PyPI does not serve it, rather than "we could
-          # not ask".
-          if ! curl -sSf "https://pypi.org/pypi/pip/json" >/dev/null; then
-            echo "::error::cannot reach PyPI, so nothing can be concluded about whether" \
-              "wisent-visuals is published. Refusing rather than guessing."
+          # Read what PyPI SAYS, not whether curl succeeded. Under `curl -sSf` a rate
+          # limit, an error page and a permission refusal all fail exactly like a
+          # not-found answer, so inferring absence from a failed request concludes
+          # "nothing is published, the baseline is honest" on any of them — and the
+          # uninformed outcome is the passing one. A reachability control against another
+          # project is not enough either: it proves the index answered about THAT project,
+          # not that ours was answered rather than throttled. So demand testimony, and
+          # distinguish three outcomes instead of two: named, stated-absent, unproven.
+          #
+          # One request, reused by every arm below. Fewer lookups is also less exposure to
+          # the throttling this is defending against.
+          answer="$(curl -s "https://pypi.org/pypi/wisent-visuals/json" || true)"
+          if printf '%s' "$answer" | jq -e '.info.name' >/dev/null; then
+            serves=yes
+          elif printf '%s' "$answer" |
+               jq -e '(.message // "") | ascii_downcase | contains("not found")' >/dev/null; then
+            serves=no
+          else
+            # `|| true` above is safe only because both conclusions demand specific content
+            # and this fallthrough refuses. Never let an empty answer read as ok.
+            #
+            # The two ways of learning nothing get separate diagnoses, because a
+            # maintainer chases them differently — and $answer already separates them, so
+            # no second request is needed. A reachability probe against another project
+            # would cost one, and could itself be throttled, misattributing in reverse.
+            if [ -z "$answer" ]; then
+              echo "::error::the request to PyPI about wisent-visuals returned nothing, so" \
+                "it did not complete — no egress, DNS failure, or the index is down." \
+                "Refusing rather than guessing whether it is published."
+            else
+              echo "::error::PyPI answered about wisent-visuals, but the answer neither" \
+                "names the project nor states its absence — an error, permission or" \
+                "throttle page. The request succeeded and told us nothing. Refusing" \
+                "rather than guessing whether it is published."
+            fi
             false
           fi
 
           if [ "$claims_registry" = yes ]; then
-            if ! curl -sSf "https://pypi.org/pypi/wisent-visuals/$released/json" >/dev/null; then
+            if [ "$serves" != yes ]; then
+              echo "::error::released-surface.json claims $marker, but PyPI states it does" \
+                "not serve wisent-visuals at all. Regenerate it with scripts/baseline.py."
+              false
+            fi
+            if ! printf '%s' "$answer" |
+                 jq -e --arg v "$released" '.releases | has($v)' >/dev/null; then
               echo "::error::released-surface.json claims $marker, but PyPI does not serve" \
                 "wisent-visuals $released. Regenerate it with scripts/baseline.py."
               false
             fi
             echo "PyPI serves the $released artifact this baseline claims."
 
-            # Being honest about the artifact is not the same as being on the CURRENT
-            # one. PyPI serves old releases forever, so the check above keeps passing
-            # after a newer version ships: the baseline stays pinned to the superseded
-            # release, and every later decision is measured against a contract that is
-            # no longer the released one. The marker stays truthful throughout, which is
-            # exactly why the bidirectional check cannot notice. `info.version` is the
-            # same source of truth scripts/baseline.py resolves to pick its artifact, so
-            # this asserts the committed file still agrees with it — it regenerates
-            # nothing and lets no recomputed surface near the decision.
-            latest="$(curl -sSf "https://pypi.org/pypi/wisent-visuals/json" | jq -r .info.version)"
+            # Being honest about the artifact is not the same as being on the CURRENT one.
+            # PyPI serves old releases forever, so the check above keeps passing after a
+            # newer version ships: the baseline stays pinned to the superseded release, and
+            # every later decision is measured against a contract that is no longer the
+            # released one. The marker stays truthful throughout, which is exactly why the
+            # bidirectional check cannot notice. `info.version` is the same source of truth
+            # scripts/baseline.py resolves to pick its artifact, so this asserts the
+            # committed file still agrees with it — it regenerates nothing and lets no
+            # recomputed surface near the decision.
+            latest="$(printf '%s' "$answer" | jq -r .info.version)"
             if [ "$released" != "$latest" ]; then
               echo "::error::released-surface.json is pinned to $released, but PyPI now" \
                 "serves $latest as the latest release of wisent-visuals. The baseline is a" \
@@ -158,11 +186,11 @@ jobs:
             fi
             echo "Baseline $released is still the latest release."
           else
-            if curl -sSf "https://pypi.org/pypi/wisent-visuals/json" >/dev/null; then
+            if [ "$serves" = yes ]; then
               echo "::error::released-surface.json claims $marker, i.e. nothing published," \
                 "but PyPI does serve wisent-visuals. The baseline is dodging a real" \
                 "release. Regenerate it with scripts/baseline.py."
               false
             fi
-            echo "Nothing published, as the $marker baseline claims."
+            echo "PyPI states it does not serve wisent-visuals, as the $marker baseline claims."
           fi
