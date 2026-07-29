@@ -102,6 +102,22 @@ jobs:
           # unreleased.
           released="$(jq -r .version released-surface.json)"
           marker="$(jq -r '.source | split(" ") | first' released-surface.json)"
+
+          # Ask PyPI about the project this repository ACTUALLY publishes, read out of
+          # pyproject.toml rather than written here as a literal. A hardcoded name is a
+          # fail-open: rename the distribution and this step keeps interrogating the old
+          # one, which PyPI still serves, so the gate stays green while validating a
+          # project the repository no longer ships. PyPI's absence answer is generic —
+          # {"message": "Not Found"} does not name what it was asked about — so an empty
+          # or wrong name would read as proven absence. Hence the name is asserted here,
+          # against the repository fact, before it is ever sent.
+          project="$(awk -F'"' '/^name = /{print $2; exit}' pyproject.toml)"
+          if [ -z "$project" ]; then
+            echo "::error::pyproject.toml declares no [project] name, so there is no subject" \
+              "to ask PyPI about and absence could not be distinguished from asking wrongly."
+            false
+          fi
+          echo "project:  $project"
           echo "baseline: $released"
           echo "marker:   $marker"
 
@@ -115,54 +131,74 @@ jobs:
               ;;
           esac
 
-          # Read what PyPI SAYS, not whether curl succeeded. Under `curl -sSf` a rate
-          # limit, an error page and a permission refusal all fail exactly like a
+          # Read what PyPI SAYS, never whether curl succeeded. Under `curl -sSf` a rate
+          # limit, a permission refusal and an error page all fail exactly like a
           # not-found answer, so inferring absence from a failed request concludes
           # "nothing is published, the baseline is honest" on any of them — and the
-          # uninformed outcome is the passing one. A reachability control against another
-          # project is not enough either: it proves the index answered about THAT project,
-          # not that ours was answered rather than throttled. So demand testimony, and
-          # distinguish three outcomes instead of two: named, stated-absent, unproven.
-          #
-          # One request, reused by every arm below. Fewer lookups is also less exposure to
-          # the throttling this is defending against.
-          answer="$(curl -s "https://pypi.org/pypi/wisent-visuals/json" || true)"
-          if printf '%s' "$answer" | jq -e '.info.name' >/dev/null; then
-            serves=yes
-          elif printf '%s' "$answer" |
-               jq -e '(.message // "") | ascii_downcase | contains("not found")' >/dev/null; then
-            serves=no
-          else
-            # `|| true` above is safe only because both conclusions demand specific content
-            # and this fallthrough refuses. Never let an empty answer read as ok.
-            #
-            # The two ways of learning nothing get separate diagnoses, because a
-            # maintainer chases them differently — and $answer already separates them, so
-            # no second request is needed. A reachability probe against another project
-            # would cost one, and could itself be throttled, misattributing in reverse.
-            if [ -z "$answer" ]; then
-              echo "::error::the request to PyPI about wisent-visuals returned nothing, so" \
-                "it did not complete — no egress, DNS failure, or the index is down." \
-                "Refusing rather than guessing whether it is published."
-            else
-              echo "::error::PyPI answered about wisent-visuals, but the answer neither" \
-                "names the project nor states its absence — an error, permission or" \
-                "throttle page. The request succeeded and told us nothing. Refusing" \
-                "rather than guessing whether it is published."
-            fi
-            false
-          fi
+          # uninformed outcome is the passing one. So classify the answer's content into
+          # four outcomes, and let only a stated absence stand as absence.
+          tmp="$(mktemp -d)"
+          ask() { curl -s "https://pypi.org/pypi/$1/json" > "$2" || true; }
+          verdict_of() {
+            if [ ! -s "$1" ]; then echo silent; return; fi
+            if jq -e '.info.name' "$1" >/dev/null; then echo names; return; fi
+            if jq -e '(.message // "") | ascii_downcase | contains("not found")' \
+                 "$1" >/dev/null; then echo absent; return; fi
+            echo unreadable
+          }
+
+          # Control, through EXACTLY the spelling used on the subject — same URL shape,
+          # same jq paths, same classifier. Not a liveness ping: it proves this step can
+          # still RECOGNISE a project PyPI certainly serves. Without it, a jq path that
+          # silently stopped matching would refuse forever while the registry answered
+          # perfectly, and the operator would blame PyPI. That is the fail-closed twin of
+          # the fail-open above: same invisibility, opposite direction, equally wrong.
+          ask pip "$tmp/control.json"
+          case "$(verdict_of "$tmp/control.json")" in
+            names) ;;
+            silent)
+              echo "::error::PyPI returned nothing for the control lookup, so the request did" \
+                "not complete — no egress, DNS failure, or the index is down. Refusing" \
+                "rather than guessing whether $project is published."
+              false
+              ;;
+            *)
+              echo "::error::this step cannot recognise pip, which PyPI certainly serves, so" \
+                "any verdict it reaches about $project is meaningless. The CHECK is broken," \
+                "not the registry — the answer shape changed, or jq is missing or altered."
+              false
+              ;;
+          esac
+
+          # One lookup for the subject, reused by every arm below: fewer requests is the
+          # point when throttling is the hazard being defended against.
+          ask "$project" "$tmp/subject.json"
+          case "$(verdict_of "$tmp/subject.json")" in
+            names) serves=yes ;;
+            absent) serves=no ;;
+            silent)
+              echo "::error::the request to PyPI about $project returned nothing, so it did" \
+                "not complete. Refusing rather than guessing whether it is published."
+              false
+              ;;
+            *)
+              echo "::error::PyPI answered about $project, but the answer neither names the" \
+                "project nor states its absence — an error, permission or throttle page." \
+                "The request succeeded and told us nothing. Refusing rather than guessing."
+              false
+              ;;
+          esac
 
           if [ "$claims_registry" = yes ]; then
             if [ "$serves" != yes ]; then
               echo "::error::released-surface.json claims $marker, but PyPI states it does" \
-                "not serve wisent-visuals at all. Regenerate it with scripts/baseline.py."
+                "not serve $project at all. Regenerate it with scripts/baseline.py."
               false
             fi
-            if ! printf '%s' "$answer" |
-                 jq -e --arg v "$released" '.releases | has($v)' >/dev/null; then
+            if ! jq -e --arg v "$released" '.releases | has($v)' \
+                 "$tmp/subject.json" >/dev/null; then
               echo "::error::released-surface.json claims $marker, but PyPI does not serve" \
-                "wisent-visuals $released. Regenerate it with scripts/baseline.py."
+                "$project $released. Regenerate it with scripts/baseline.py."
               false
             fi
             echo "PyPI serves the $released artifact this baseline claims."
@@ -176,10 +212,10 @@ jobs:
             # scripts/baseline.py resolves to pick its artifact, so this asserts the
             # committed file still agrees with it — it regenerates nothing and lets no
             # recomputed surface near the decision.
-            latest="$(printf '%s' "$answer" | jq -r .info.version)"
+            latest="$(jq -r .info.version "$tmp/subject.json")"
             if [ "$released" != "$latest" ]; then
               echo "::error::released-surface.json is pinned to $released, but PyPI now" \
-                "serves $latest as the latest release of wisent-visuals. The baseline is a" \
+                "serves $latest as the latest release of $project. The baseline is a" \
                 "superseded artifact, so every comparison is measured against a contract" \
                 "that is no longer the released one. Regenerate with scripts/baseline.py."
               false
@@ -188,9 +224,9 @@ jobs:
           else
             if [ "$serves" = yes ]; then
               echo "::error::released-surface.json claims $marker, i.e. nothing published," \
-                "but PyPI does serve wisent-visuals. The baseline is dodging a real" \
-                "release. Regenerate it with scripts/baseline.py."
+                "but PyPI does serve $project. The baseline is dodging a real release." \
+                "Regenerate it with scripts/baseline.py."
               false
             fi
-            echo "PyPI states it does not serve wisent-visuals, as the $marker baseline claims."
+            echo "PyPI states it does not serve $project, as the $marker baseline claims."
           fi
