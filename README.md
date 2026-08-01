@@ -1,7 +1,7 @@
 # Wisent Plots
 
 <!-- wisent-readme-signals:start -->
-[![CI](https://github.com/wisent-ai/wisent-visuals/actions/workflows/version-check.yml/badge.svg?branch=main)](https://github.com/wisent-ai/wisent-visuals/actions/workflows/version-check.yml)
+[![Version check](https://github.com/wisent-ai/wisent-visuals/actions/workflows/version-check.yml/badge.svg?branch=main)](https://github.com/wisent-ai/wisent-visuals/actions/workflows/version-check.yml)
 [![Release](https://img.shields.io/github/v/release/wisent-ai/wisent-visuals?display_name=tag&sort=semver)](https://github.com/wisent-ai/wisent-visuals/releases)
 [![Downloads](https://img.shields.io/github/downloads/wisent-ai/wisent-visuals/total)](https://github.com/wisent-ai/wisent-visuals/releases)
 [![License](https://img.shields.io/github/license/wisent-ai/wisent-visuals)](https://github.com/wisent-ai/wisent-visuals)
