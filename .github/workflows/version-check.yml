@@ -201,6 +201,23 @@ jobs:
           echo "baseline: $released"
           echo "marker:   $marker"
 
+          # Nothing in this job reads a git ref, and that is a decision, not an
+          # omission. scripts/baseline.py resolves the baseline from PyPI alone: it
+          # mints pypi-sdist and pypi-wheel, and refuses outright when the published
+          # release offers neither, rather than degrading to a tag or to HEAD (its
+          # `head` constant is never written). So the non-registry arm below is
+          # reachable only through a hand-edited file, there is no tag question in
+          # this gate to scope to `origin`, and adding `git ls-remote` here would
+          # assert something no verdict consumes. Measured while writing this: origin
+          # lists no tags and this repository serves no GitHub Release.
+          #
+          # What revokes this: a non-pypi marker landing in released-surface.json, a
+          # git tier appearing in scripts/baseline.py, or origin serving a tag or a
+          # Release. Then absence must be established AT ORIGIN — `git ls-remote
+          # --tags origin`, because checkout fetches no tags so a local listing is
+          # empty on a runner whatever origin holds, and a fork shares the upstream's
+          # objects so its local tags are not ours — plus a tag fetch after checkout.
+          # oko/.github/workflows/version-check.yml carries both.
           case "$marker" in
             pypi-*) claims_registry=yes ;;
             stado:*|git-archive:*|head:*) claims_registry=no ;;
