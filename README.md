@@ -1,4 +1,4 @@
-# Wisent Plots
+# Wisent Visuals
 
 <!-- wisent-readme-signals:start -->
 [![Release](https://img.shields.io/github/v/release/wisent-ai/wisent-visuals?display_name=tag&sort=semver)](https://github.com/wisent-ai/wisent-visuals/releases)
@@ -17,6 +17,7 @@ Create beautiful, brand-styled plots with ease. This package provides ready-to-u
 - **Customizable**: Override colors and settings as needed
 - **High Quality**: Publication-ready output with customizable DPI
 - **Type Hints**: Full type annotation support
+- **README banners**: Deterministic, brand-safe SVG, WebP, and PNG generation
 
 ## Installation
 
@@ -57,6 +58,78 @@ fig, ax = chart.plot(
 chart.save(fig, "my_chart.png")
 # Or: plt.show()
 ```
+
+## README Banners
+
+Keep banner content in a small TOML file:
+
+```toml
+title = "Deep control. Safer output."
+description = "A Python package for latent space monitoring and guardrails."
+product = "Wisent"
+url = "wisent.ai"
+theme = "dark"
+layout = "latent-field-left"
+width = 1584
+height = 396
+```
+
+Generate the committed README image and its editable, self-contained SVG source:
+
+```bash
+wisent-banner \
+  --config .github/banner.toml \
+  --output assets/readme-banner.webp \
+  --svg assets/readme-banner.svg
+```
+
+The renderer bundles Hubot Sans, validates dimensions and supported layouts, and
+produces byte-identical output for the same configuration. Commit both the TOML
+configuration and generated assets; CI can rerun this command and use
+`git diff --exit-code` to detect stale output.
+
+### Automatic organization-wide personalization
+
+`wisent-banner-bot` uses a curated factual headline and supporting sentence for
+every known Wisent repository. The copy states what the package does; it is not
+assembled from generic category slogans. Repository names, descriptions, topics,
+primary languages, and README introductions remain the fallback for newly
+created repositories and drive the matching artwork:
+
+- routing graphs for gateways and model routers;
+- measured bars for benchmarks and visualization;
+- orbits for agent systems;
+- waveforms for audio projects;
+- stacked layers for storage and context;
+- latent activation fields for models and safety;
+- coordinated signals for SDKs, clients, and general developer tools.
+
+Every repository name is also used as a deterministic art seed. Repositories in
+the same family therefore vary in topology, density, phase, node count, scale,
+and composition instead of repeating the same graphic. Names with concrete
+meaning override the broad family: `iskra` becomes a spark, `las` a forest,
+`stado` a flock, `brama` a gate, `kronika` a timeline, `probierz` a gauge,
+`skarbiec` a vault, `jeden` a focal point, and `codespy` a scanning field.
+
+Preview decisions without changing GitHub:
+
+```bash
+wisent-banner-bot plan --org wisent-ai --limit 10
+```
+
+The 15-minute `banner-bot.yml` workflow uses an organization-installed GitHub App
+to create pull requests. Configure these repository secrets:
+
+- `WISENT_BANNER_APP_ID`;
+- `WISENT_BANNER_APP_PRIVATE_KEY`.
+
+The app needs repository metadata read access plus Contents and Pull requests
+read/write access. The bot excludes the reference `wisent` repository, skips
+forks and archived repositories, and never replaces an existing manually
+managed banner. Bot-owned README markup is bounded by
+`wisent-banner:start`/`wisent-banner:end` comments, so later runs replace only
+their own block. A source fingerprint prevents unchanged repositories from
+receiving another pull request.
 
 ## Available Styles
 

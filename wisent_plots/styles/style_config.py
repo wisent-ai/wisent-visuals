@@ -3,23 +3,25 @@
 This module contains style presets based on Wisent's Figma design system.
 """
 
-from typing import Dict, Any
+from typing import Any, Dict
+
+from wisent_plots.brand import BRAND_COLORS, FONT_FAMILY
 
 # Style definitions based on Figma Visual Identity
 STYLES: Dict[int, Dict[str, Any]] = {
     1: {
         "name": "Area Chart - Edge - Style 1",
         "colors": {
-            "primary": "#B0E3B3",  # Light green (One)
-            "secondary": "#90B892",  # Medium green (Two)
-            "accent": "#5A715B",  # Dark green (Three)
-            "background": "#121212",  # Dark background (gray-950)
-            "text": "#C5FFC8",  # Brand accent green for title
-            "grid": "#2D3130",  # Grid lines (gray-800)
-            "legend_text": "#769978",  # Legend text (green-600)
+            "primary": BRAND_COLORS["secondary"],  # Light green (One)
+            "secondary": BRAND_COLORS["tertiary"],  # Medium green (Two)
+            "accent": BRAND_COLORS["deep"],  # Dark green (Three)
+            "background": BRAND_COLORS["surface"],  # Dark background (gray-950)
+            "text": BRAND_COLORS["primary"],  # Brand accent green for title
+            "grid": BRAND_COLORS["grid"],  # Grid lines (gray-800)
+            "legend_text": BRAND_COLORS["muted"],  # Legend text (green-600)
         },
         "font": {
-            "family": "Hubot Sans",  # Hubot Sans from Figma
+            "family": FONT_FAMILY,  # Hubot Sans from Figma
             "size": {
                 "title": 20,  # Text xl (20px)
                 "label": 14,  # Text sm (14px)
@@ -55,16 +57,16 @@ STYLES: Dict[int, Dict[str, Any]] = {
     2: {
         "name": "Area Chart - Edge - Style 2 (Gradient)",
         "colors": {
-            "primary": "#B0E3B3",  # Light green (One)
-            "secondary": "#90B892",  # Medium green (Two)
-            "accent": "#5A715B",  # Dark green (Three)
-            "background": "#121212",  # Dark background (gray-950)
-            "text": "#C5FFC8",  # Brand accent green for title
-            "grid": "#2D3130",  # Grid lines (gray-800)
-            "legend_text": "#769978",  # Legend text (green-600)
+            "primary": BRAND_COLORS["secondary"],  # Light green (One)
+            "secondary": BRAND_COLORS["tertiary"],  # Medium green (Two)
+            "accent": BRAND_COLORS["deep"],  # Dark green (Three)
+            "background": BRAND_COLORS["surface"],  # Dark background (gray-950)
+            "text": BRAND_COLORS["primary"],  # Brand accent green for title
+            "grid": BRAND_COLORS["grid"],  # Grid lines (gray-800)
+            "legend_text": BRAND_COLORS["muted"],  # Legend text (green-600)
         },
         "font": {
-            "family": "Hubot Sans",  # Hubot Sans from Figma
+            "family": FONT_FAMILY,  # Hubot Sans from Figma
             "size": {
                 "title": 20,  # Text xl (20px)
                 "label": 14,  # Text sm (14px)
@@ -100,16 +102,16 @@ STYLES: Dict[int, Dict[str, Any]] = {
     3: {
         "name": "Area Chart - Edge - Style 3 (Pattern)",
         "colors": {
-            "primary": "#B0E3B3",  # Light green (One)
-            "secondary": "#90B892",  # Medium green (Two)
-            "accent": "#5A715B",  # Dark green (Three)
-            "background": "#121212",  # Dark background (gray-950)
-            "text": "#C5FFC8",  # Brand accent green for title
-            "grid": "#2D3130",  # Grid lines (gray-800)
-            "legend_text": "#769978",  # Legend text (green-600)
+            "primary": BRAND_COLORS["secondary"],  # Light green (One)
+            "secondary": BRAND_COLORS["tertiary"],  # Medium green (Two)
+            "accent": BRAND_COLORS["deep"],  # Dark green (Three)
+            "background": BRAND_COLORS["surface"],  # Dark background (gray-950)
+            "text": BRAND_COLORS["primary"],  # Brand accent green for title
+            "grid": BRAND_COLORS["grid"],  # Grid lines (gray-800)
+            "legend_text": BRAND_COLORS["muted"],  # Legend text (green-600)
         },
         "font": {
-            "family": "Hubot Sans",  # Hubot Sans from Figma
+            "family": FONT_FAMILY,  # Hubot Sans from Figma
             "size": {
                 "title": 20,  # Text xl (20px)
                 "label": 14,  # Text sm (14px)
@@ -145,16 +147,16 @@ STYLES: Dict[int, Dict[str, Any]] = {
     4: {
         "name": "Area Chart - Edge - Style 4 (2 Patterns)",
         "colors": {
-            "primary": "#B0E3B3",  # Light green (One)
-            "secondary": "#90B892",  # Medium green (Two)
-            "accent": "#5A715B",  # Dark green (Three)
-            "background": "#121212",  # Dark background (gray-950)
-            "text": "#C5FFC8",  # Brand accent green for title
-            "grid": "#2D3130",  # Grid lines (gray-800)
-            "legend_text": "#769978",  # Legend text (green-600)
+            "primary": BRAND_COLORS["secondary"],  # Light green (One)
+            "secondary": BRAND_COLORS["tertiary"],  # Medium green (Two)
+            "accent": BRAND_COLORS["deep"],  # Dark green (Three)
+            "background": BRAND_COLORS["surface"],  # Dark background (gray-950)
+            "text": BRAND_COLORS["primary"],  # Brand accent green for title
+            "grid": BRAND_COLORS["grid"],  # Grid lines (gray-800)
+            "legend_text": BRAND_COLORS["muted"],  # Legend text (green-600)
         },
         "font": {
-            "family": "Hubot Sans",  # Hubot Sans from Figma
+            "family": FONT_FAMILY,  # Hubot Sans from Figma
             "size": {
                 "title": 20,  # Text xl (20px)
                 "label": 14,  # Text sm (14px)
@@ -190,16 +192,16 @@ STYLES: Dict[int, Dict[str, Any]] = {
     5: {
         "name": "Area Chart - Edge - Solid Colors",
         "colors": {
-            "primary": "#C5FFC8",  # Brand accent green (One) from Figma
+            "primary": BRAND_COLORS["primary"],  # Brand accent green (One) from Figma
             "secondary": "#FA5A46",  # Error red-500 (Two) from Figma
             "accent": "#B19ECC",  # Character purple-500 (Three) from Figma
-            "background": "#121212",  # Dark background (gray-950)
-            "text": "#C5FFC8",  # Brand accent green for title
-            "grid": "#2D3130",  # Grid lines (gray-800)
-            "legend_text": "#769978",  # Legend text (green-600)
+            "background": BRAND_COLORS["surface"],  # Dark background (gray-950)
+            "text": BRAND_COLORS["primary"],  # Brand accent green for title
+            "grid": BRAND_COLORS["grid"],  # Grid lines (gray-800)
+            "legend_text": BRAND_COLORS["muted"],  # Legend text (green-600)
         },
         "font": {
-            "family": "Hubot Sans",  # Hubot Sans from Figma
+            "family": FONT_FAMILY,  # Hubot Sans from Figma
             "size": {
                 "title": 20,  # Text xl (20px)
                 "label": 14,  # Text sm (14px)
@@ -237,16 +239,16 @@ STYLES: Dict[int, Dict[str, Any]] = {
     10: {
         "name": "Line Chart - Solid Palette",
         "colors": {
-            "primary": "#C5FFC8",  # Brand accent green
+            "primary": BRAND_COLORS["primary"],  # Brand accent green
             "secondary": "#FA5A46",  # Error red-500
             "accent": "#B19ECC",  # Character purple-500
-            "background": "#121212",  # Dark background
-            "text": "#C5FFC8",  # Brand accent green for title
-            "grid": "#2D3130",  # Grid lines
-            "legend_text": "#769978",  # Legend text
+            "background": BRAND_COLORS["surface"],  # Dark background
+            "text": BRAND_COLORS["primary"],  # Brand accent green for title
+            "grid": BRAND_COLORS["grid"],  # Grid lines
+            "legend_text": BRAND_COLORS["muted"],  # Legend text
         },
         "font": {
-            "family": "Hubot Sans",
+            "family": FONT_FAMILY,
             "size": {
                 "title": 20,
                 "label": 14,
@@ -279,16 +281,16 @@ STYLES: Dict[int, Dict[str, Any]] = {
     11: {
         "name": "Line Chart - Solid Color (with markers)",
         "colors": {
-            "primary": "#C5FFC8",  # Brand accent green
+            "primary": BRAND_COLORS["primary"],  # Brand accent green
             "secondary": "#FA5A46",  # Error red-500
             "accent": "#B19ECC",  # Character purple-500
-            "background": "#121212",  # Dark background
-            "text": "#C5FFC8",  # Brand accent green for title
-            "grid": "#2D3130",  # Grid lines
-            "legend_text": "#769978",  # Legend text
+            "background": BRAND_COLORS["surface"],  # Dark background
+            "text": BRAND_COLORS["primary"],  # Brand accent green for title
+            "grid": BRAND_COLORS["grid"],  # Grid lines
+            "legend_text": BRAND_COLORS["muted"],  # Legend text
         },
         "font": {
-            "family": "Hubot Sans",
+            "family": FONT_FAMILY,
             "size": {
                 "title": 20,
                 "label": 14,
@@ -327,13 +329,13 @@ STYLES: Dict[int, Dict[str, Any]] = {
             "accent": "#FF8C00",  # Orange
             "quaternary": "#90EE90",  # Light green
             "quinary": "#87CEEB",  # Sky blue
-            "background": "#121212",  # Dark background
-            "text": "#C5FFC8",  # Brand accent green for title
-            "grid": "#2D3130",  # Grid lines
-            "legend_text": "#769978",  # Legend text
+            "background": BRAND_COLORS["surface"],  # Dark background
+            "text": BRAND_COLORS["primary"],  # Brand accent green for title
+            "grid": BRAND_COLORS["grid"],  # Grid lines
+            "legend_text": BRAND_COLORS["muted"],  # Legend text
         },
         "font": {
-            "family": "Hubot Sans",
+            "family": FONT_FAMILY,
             "size": {
                 "title": 20,
                 "label": 14,
@@ -377,7 +379,7 @@ STYLES: Dict[int, Dict[str, Any]] = {
             "legend_text": "#666666",  # Medium gray legend text
         },
         "font": {
-            "family": "Hubot Sans",
+            "family": FONT_FAMILY,
             "size": {
                 "title": 20,
                 "label": 14,
@@ -419,7 +421,7 @@ STYLES: Dict[int, Dict[str, Any]] = {
             "legend_text": "#666666",  # Medium gray legend text
         },
         "font": {
-            "family": "Hubot Sans",
+            "family": FONT_FAMILY,
             "size": {
                 "title": 20,
                 "label": 14,
@@ -464,7 +466,7 @@ STYLES: Dict[int, Dict[str, Any]] = {
             "legend_text": "#666666",  # Medium gray legend text
         },
         "font": {
-            "family": "Hubot Sans",
+            "family": FONT_FAMILY,
             "size": {
                 "title": 20,
                 "label": 14,
@@ -499,14 +501,14 @@ STYLES: Dict[int, Dict[str, Any]] = {
     30: {
         "name": "Bubble Chart - Brand Colors (Dark Theme)",
         "colors": {
-            "background": "#121212",
-            "text": "#C5FFC8",
-            "grid": "#2D3130",
-            "legend_text": "#769978",
+            "background": BRAND_COLORS["surface"],
+            "text": BRAND_COLORS["primary"],
+            "grid": BRAND_COLORS["grid"],
+            "legend_text": BRAND_COLORS["muted"],
             "bubble1": "#FA5A46",  # Red
             "bubble2": "#FF8C00",  # Orange
             "bubble3": "#FFD700",  # Yellow
-            "bubble4": "#C5FFC8",  # Green
+            "bubble4": BRAND_COLORS["primary"],  # Green
             "bubble5": "#00CED1",  # Cyan
             "bubble6": "#87CEEB",  # Sky blue
             "bubble7": "#B19ECC",  # Purple
@@ -514,7 +516,7 @@ STYLES: Dict[int, Dict[str, Any]] = {
             "bubble9": "#A9A9A9",  # Gray
         },
         "font": {
-            "family": "Hubot Sans",
+            "family": FONT_FAMILY,
             "size": {"title": 20, "label": 14, "tick": 12},
             "weight": {"title": 400, "label": 400},
         },
@@ -522,9 +524,9 @@ STYLES: Dict[int, Dict[str, Any]] = {
     31: {
         "name": "Bubble Chart - Black Theme (Grayscale)",
         "colors": {
-            "background": "#121212",
+            "background": BRAND_COLORS["surface"],
             "text": "#FFFFFF",
-            "grid": "#2D3130",
+            "grid": BRAND_COLORS["grid"],
             "legend_text": "#A9A9A9",
             "bubble1": "#FFFFFF",  # White
             "bubble2": "#E0E0E0",  # Light gray
@@ -537,7 +539,7 @@ STYLES: Dict[int, Dict[str, Any]] = {
             "bubble9": "#303030",  # Very dark gray
         },
         "font": {
-            "family": "Hubot Sans",
+            "family": FONT_FAMILY,
             "size": {"title": 20, "label": 14, "tick": 12},
             "weight": {"title": 400, "label": 400},
         },
@@ -560,7 +562,7 @@ STYLES: Dict[int, Dict[str, Any]] = {
             "bubble9": "#666666",  # Medium gray
         },
         "font": {
-            "family": "Hubot Sans",
+            "family": FONT_FAMILY,
             "size": {"title": 20, "label": 14, "tick": 12},
             "weight": {"title": 400, "label": 400},
         },
@@ -569,12 +571,12 @@ STYLES: Dict[int, Dict[str, Any]] = {
     40: {
         "name": "Pie Chart - Brand Colors",
         "colors": {
-            "background": "#121212",  # Dark background
-            "title": "#C5FFC8",  # Brand accent green
-            "legend_text": "#769978",  # Green-600
+            "background": BRAND_COLORS["surface"],  # Dark background
+            "title": BRAND_COLORS["primary"],  # Brand accent green
+            "legend_text": BRAND_COLORS["muted"],  # Green-600
             "center_text": "#FFFFFF",  # White for center label
             "separator": "#000000",  # Black lines between slices
-            "slice1": "#C5FFC8",  # Brand accent green
+            "slice1": BRAND_COLORS["primary"],  # Brand accent green
             "slice2": "#FA5A46",  # Error red-500
             "slice3": "#FFB366",  # Warning orange-400
             "slice4": "#FFD699",  # Warning orange-300
@@ -582,7 +584,7 @@ STYLES: Dict[int, Dict[str, Any]] = {
             "slice6": "#A4C2F4",  # Accent blue-400
         },
         "font": {
-            "family": "Hubot Sans",
+            "family": FONT_FAMILY,
             "size": {"title": 16, "label": 12, "center": 12},
             "weight": {"title": 400, "label": 400, "center": 400},
         },
@@ -594,7 +596,7 @@ STYLES: Dict[int, Dict[str, Any]] = {
     41: {
         "name": "Pie Chart - Black/Grayscale Theme",
         "colors": {
-            "background": "#121212",  # Dark background
+            "background": BRAND_COLORS["surface"],  # Dark background
             "title": "#FFFFFF",  # White title
             "legend_text": "#A9A9A9",  # Gray legend
             "center_text": "#FFFFFF",  # White for center label
@@ -607,7 +609,7 @@ STYLES: Dict[int, Dict[str, Any]] = {
             "slice6": "#787878",  # Dark gray
         },
         "font": {
-            "family": "Hubot Sans",
+            "family": FONT_FAMILY,
             "size": {"title": 16, "label": 12, "center": 12},
             "weight": {"title": 400, "label": 400, "center": 400},
         },
@@ -632,7 +634,7 @@ STYLES: Dict[int, Dict[str, Any]] = {
             "slice6": "#C8C8C8",  # Light gray
         },
         "font": {
-            "family": "Hubot Sans",
+            "family": FONT_FAMILY,
             "size": {"title": 16, "label": 12, "center": 12},
             "weight": {"title": 400, "label": 400, "center": 400},
         },
@@ -645,19 +647,19 @@ STYLES: Dict[int, Dict[str, Any]] = {
     50: {
         "name": "Radar Chart - Brand Colors",
         "colors": {
-            "background": "#121212",  # Dark background
-            "title": "#C5FFC8",  # Brand accent green
-            "legend_text": "#769978",  # Green-600
+            "background": BRAND_COLORS["surface"],  # Dark background
+            "title": BRAND_COLORS["primary"],  # Brand accent green
+            "legend_text": BRAND_COLORS["muted"],  # Green-600
             "axis_text": "#A9A9A9",  # Gray for axis labels
-            "grid": "#2D3130",  # Dark grid lines
+            "grid": BRAND_COLORS["grid"],  # Dark grid lines
             "axis": "#4A4A4A",  # Lighter axis lines
-            "area1": "#90B892",  # Medium green with opacity
-            "area1_stroke": "#5A715B",  # Dark green edge
+            "area1": BRAND_COLORS["tertiary"],  # Medium green with opacity
+            "area1_stroke": BRAND_COLORS["deep"],  # Dark green edge
             "area2": "#FA5A46",  # Error red-500
             "area2_stroke": "#D94435",  # Darker red edge
         },
         "font": {
-            "family": "Hubot Sans",
+            "family": FONT_FAMILY,
             "size": {"title": 16, "label": 12, "axis": 10},
             "weight": {"title": 400, "label": 400, "axis": 400},
         },
@@ -670,11 +672,11 @@ STYLES: Dict[int, Dict[str, Any]] = {
     51: {
         "name": "Radar Chart - Black/Grayscale Theme",
         "colors": {
-            "background": "#121212",  # Dark background
+            "background": BRAND_COLORS["surface"],  # Dark background
             "title": "#FFFFFF",  # White title
             "legend_text": "#A9A9A9",  # Gray legend
             "axis_text": "#A9A9A9",  # Gray for axis labels
-            "grid": "#2D3130",  # Dark grid lines
+            "grid": BRAND_COLORS["grid"],  # Dark grid lines
             "axis": "#4A4A4A",  # Lighter axis lines
             "area1": "#C8C8C8",  # Light gray
             "area1_stroke": "#909090",  # Medium gray edge
@@ -682,7 +684,7 @@ STYLES: Dict[int, Dict[str, Any]] = {
             "area2_stroke": "#303030",  # Very dark gray edge
         },
         "font": {
-            "family": "Hubot Sans",
+            "family": FONT_FAMILY,
             "size": {"title": 16, "label": 12, "axis": 10},
             "weight": {"title": 400, "label": 400, "axis": 400},
         },
@@ -707,7 +709,7 @@ STYLES: Dict[int, Dict[str, Any]] = {
             "area2_stroke": "#606060",  # Medium gray edge
         },
         "font": {
-            "family": "Hubot Sans",
+            "family": FONT_FAMILY,
             "size": {"title": 16, "label": 12, "axis": 10},
             "weight": {"title": 400, "label": 400, "axis": 400},
         },

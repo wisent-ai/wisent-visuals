@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wisent-visuals"
-version = "0.1.0"
-description = "Create beautiful plots in Wisent brand styling"
+version = "0.2.0"
+description = "Create beautiful plots and README banners in Wisent brand styling"
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "MIT"}
@@ -30,7 +30,13 @@ classifiers = [
 dependencies = [
     "matplotlib>=3.5.0",
     "numpy>=1.20.0",
+    "Pillow>=9.2.0",
+    "tomli>=2.0.0; python_version < '3.11'",
 ]
+
+[project.scripts]
+wisent-banner = "wisent_plots.banner_cli:main"
+wisent-banner-bot = "wisent_plots.banner_bot:main"
 
 [project.optional-dependencies]
 dev = [
@@ -51,7 +57,13 @@ where = ["."]
 include = ["wisent_plots*"]
 
 [tool.setuptools.package-data]
-wisent_plots = ["assets/*.svg", "assets/large/*.svg"]
+wisent_plots = [
+    "assets/*.svg",
+    "assets/*.png",
+    "assets/large/*.svg",
+    "assets/fonts/*.ttf",
+    "assets/fonts/OFL.txt",
+]
 
 [tool.black]
 line-length = 100
