@@ -367,9 +367,15 @@ def update_readme(readme: str, repository_name: str, owner: str = "wisent-ai") -
 class BannerBot:
     """Discover unmanaged repositories and open personalized banner PRs."""
 
-    def __init__(self, client: GitHubClient, excluded: Set[str]):
+    def __init__(
+        self,
+        client: GitHubClient,
+        excluded: Set[str],
+        included: Optional[Set[str]] = None,
+    ):
         self.client = client
         self.excluded = excluded
+        self.included = included
 
     def plans(self, organization: str, limit: int = 0) -> Iterable[RepositoryPlan]:
         emitted = 0
@@ -377,6 +383,7 @@ class BannerBot:
             name = repository["name"]
             if (
                 name in self.excluded
+                or (self.included is not None and name not in self.included)
                 or repository.get("archived")
                 or repository.get("disabled")
                 or repository.get("fork")
@@ -475,6 +482,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("command", choices=("plan", "sync"))
     parser.add_argument("--org", default="wisent-ai")
     parser.add_argument("--exclude", action="append", default=["wisent"])
+    parser.add_argument("--include", action="append", default=[])
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--token-env", default="WISENT_BANNER_GITHUB_TOKEN")
     return parser
@@ -487,7 +495,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print(f"{args.token_env} must contain a GitHub App token for sync", file=sys.stderr)
         return 2
 
-    bot = BannerBot(GitHubClient(token), set(args.exclude))
+    included = set(args.include) or None
+    bot = BannerBot(GitHubClient(token), set(args.exclude), included)
     plans = list(bot.plans(args.org, args.limit))
     for plan in plans:
         summary = {
