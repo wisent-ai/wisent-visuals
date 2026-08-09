@@ -158,39 +158,27 @@ class GitHubClient:
         default_branch: str,
         files: Mapping[str, bytes],
     ) -> str:
-        tree_entries = []
-        for path, content in files.items():
-            blob = self.request(
-                "POST",
-                f"/repos/{owner}/{repository}/git/blobs",
-                {
-                    "content": base64.b64encode(content).decode("ascii"),
-                    "encoding": "base64",
-                },
-            )
-            tree_entries.append(
-                {"path": path, "mode": "100644", "type": "blob", "sha": blob["sha"]}
-            )
-        tree = self.request(
-            "POST",
-            f"/repos/{owner}/{repository}/git/trees",
-            {"tree": tree_entries},
-        )
-        commit = self.request(
-            "POST",
-            f"/repos/{owner}/{repository}/git/commits",
+        readme = files["README.md"]
+        self.request(
+            "PUT",
+            f"/repos/{owner}/{repository}/contents/README.md",
             {
-                "message": "docs: add personalized README banner and buttons [skip ci]",
-                "tree": tree["sha"],
-                "parents": [],
+                "message": "docs: initialize README presentation [skip ci]",
+                "content": base64.b64encode(readme).decode("ascii"),
             },
         )
-        self.request(
-            "POST",
-            f"/repos/{owner}/{repository}/git/refs",
-            {"ref": f"refs/heads/{default_branch}", "sha": commit["sha"]},
-        )
-        return commit["html_url"]
+        for path, content in files.items():
+            if path == "README.md":
+                continue
+            self.write_content(
+                owner,
+                repository,
+                path,
+                default_branch,
+                content,
+                "docs: add personalized README banner [skip ci]",
+            )
+        return f"https://github.com/{owner}/{repository}"
 
     def open_pull_request(
         self,
