@@ -180,7 +180,7 @@ class GitHubClient:
             "POST",
             f"/repos/{owner}/{repository}/git/commits",
             {
-                "message": "docs: add personalized README banner and buttons",
+                "message": "docs: add personalized README banner and buttons [skip ci]",
                 "tree": tree["sha"],
                 "parents": [],
             },
@@ -365,7 +365,7 @@ def update_readme(readme: str, repository_name: str, owner: str = "wisent-ai") -
 
 
 class BannerBot:
-    """Discover unmanaged repositories and open personalized banner PRs."""
+    """Discover repositories and publish personalized README presentation."""
 
     def __init__(
         self,
@@ -429,7 +429,7 @@ class BannerBot:
                 empty=repository.get("size", 0) == 0,
             )
 
-    def apply(self, plan: RepositoryPlan) -> str:
+    def apply(self, plan: RepositoryPlan, direct: bool = False) -> str:
         files = {
             "README.md": update_readme(plan.readme, plan.name, plan.owner).encode("utf-8"),
         }
@@ -451,6 +451,27 @@ class BannerBot:
                 plan.default_branch,
                 files,
             )
+        if direct:
+            for path, content in files.items():
+                existing = self.client.read_content(
+                    plan.owner,
+                    plan.name,
+                    path,
+                    plan.default_branch,
+                )
+                if existing is not None and existing[0] == content:
+                    continue
+                current_sha = "" if existing is None else existing[1]
+                self.client.write_content(
+                    plan.owner,
+                    plan.name,
+                    path,
+                    plan.default_branch,
+                    content,
+                    "docs: add personalized README banner and buttons [skip ci]",
+                    current_sha,
+                )
+            return f"https://github.com/{plan.owner}/{plan.name}"
 
         branch = f"wisent-readme-bot/{plan.identity.fingerprint}"
         self.client.ensure_branch(plan.owner, plan.name, plan.default_branch, branch)
@@ -483,6 +504,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--org", default="wisent-ai")
     parser.add_argument("--exclude", action="append", default=["wisent"])
     parser.add_argument("--include", action="append", default=[])
+    parser.add_argument("--direct", action="store_true")
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--token-env", default="WISENT_BANNER_GITHUB_TOKEN")
     return parser
@@ -511,7 +533,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         if args.command == "plan":
             print(json.dumps(summary, ensure_ascii=False))
         else:
-            summary["pull_request"] = bot.apply(plan)
+            result_key = "repository_url" if args.direct else "pull_request"
+            summary[result_key] = bot.apply(plan, direct=args.direct)
             print(json.dumps(summary, ensure_ascii=False))
     return 0
 
