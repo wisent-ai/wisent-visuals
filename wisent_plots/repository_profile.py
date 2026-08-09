@@ -179,45 +179,9 @@ _PROJECT_COPY: Dict[str, Tuple[str, str]] = {
         "Run autonomous agents within bounds.",
         "Auditable Rust runtime controlling agent loops, cost, state, tools, and external effects.",
     ),
-    "adam-agent-toolkit": (
-        "Give agents economic judgment.",
-        "Python toolkit for agent cost tracking, decisions, dynamic pricing, and survival management.",
-    ),
-    "adam-services": (
-        "Eight developer tools. One service.",
-        "Zero-dependency service for code review, summaries, audits, analysis, docs, diffs, and regex.",
-    ),
     "codespy": (
         "Scan code offline. Catch real risks.",
         "Zero-dependency static scanner for security, secrets, quality, performance, and supply-chain issues.",
-    ),
-    "eve-services": (
-        "Sixteen utilities. Zero dependencies.",
-        "Developer service for validation, hashing, text, cron, JWT, diff, templates, regex, and more.",
-    ),
-    "agent-gateway": (
-        "One gateway for Adam and Eve.",
-        "Unified API for service discovery, developer tools, and cross-agent pipelines.",
-    ),
-    "adam-docs": (
-        "Turn codebases into usable documentation.",
-        "Generates API references, architecture diagrams, complexity reports, and onboarding guides.",
-    ),
-    "eve-analytics": (
-        "See the agent economy in real time.",
-        "Analytics for agent health, token markets, chat activity, and platform reporting.",
-    ),
-    "eve-toolkit": (
-        "Everyday developer tools from one CLI.",
-        "Zero-dependency CLI for hashes, UUIDs, Base64, JWT, JSON, CSV, regex, diffs, and more.",
-    ),
-    "eve-portfolio": (
-        "Developer utilities, live in the browser.",
-        "Interactive browser tools for UUIDs, hashing, passwords, Base64, JSON, and colors.",
-    ),
-    "adam-monitor": (
-        "Track agent health, cost, and runway.",
-        "Real-time dashboard for agent finances, activity, spam, and platform economics.",
     ),
     "mlx-swift": (
         "Use MLX natively from Swift.",
