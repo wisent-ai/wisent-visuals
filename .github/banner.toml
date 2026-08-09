@@ -1,0 +1,15 @@
+[automation]
+managed = true
+source_fingerprint = "46949dd3020a32f4"
+category = "visualization"
+
+[banner]
+title = "Wisent charts. Ready to publish."
+description = "Python package for producing charts and README banners in the Wisent visual system."
+product = "Wisent"
+url = "wisent.ai"
+theme = "dark"
+layout = "benchmark-left"
+art_seed = "wisent-visuals"
+width = 1584
+height = 396
