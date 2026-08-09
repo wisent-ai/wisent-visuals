@@ -214,7 +214,7 @@ def _has_manual_banner(readme: str) -> bool:
 
 
 def update_readme(readme: str, repository_name: str) -> str:
-    """Insert or replace only the bot-owned README banner block."""
+    """Keep the bot-owned banner as the README's first rendered block."""
     if _has_manual_banner(readme):
         return readme
     block = "\n".join(
@@ -226,22 +226,17 @@ def update_readme(readme: str, repository_name: str) -> str:
             BANNER_END,
         ]
     )
-    if BANNER_START in readme and BANNER_END in readme:
-        pattern = re.compile(re.escape(BANNER_START) + r".*?" + re.escape(BANNER_END), re.DOTALL)
-        return pattern.sub(block, readme)
-
-    if not readme.strip():
-        return f"# {repository_name}\n\n{block}\n"
-
-    signals = "<!-- wisent-readme-signals:end -->"
-    if signals in readme:
-        return readme.replace(signals, f"{signals}\n\n{block}", 1)
-
-    heading = re.search(r"^# .+$", readme, flags=re.MULTILINE)
-    if heading:
-        end = heading.end()
-        return f"{readme[:end]}\n\n{block}{readme[end:]}"
-    return f"{block}\n\n{readme}"
+    body = readme
+    if BANNER_START in body and BANNER_END in body:
+        pattern = re.compile(
+            re.escape(BANNER_START) + r".*?" + re.escape(BANNER_END),
+            re.DOTALL,
+        )
+        body = pattern.sub("", body, count=1)
+    body = body.lstrip("\n")
+    if not body.strip():
+        body = f"# {repository_name}\n"
+    return f"{block}\n\n{body}"
 
 
 class BannerBot:

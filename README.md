@@ -90,11 +90,11 @@ configuration and generated assets; CI can rerun this command and use
 
 ### Automatic organization-wide personalization
 
-`wisent-banner-bot` uses a curated factual headline and supporting sentence for
-every known Wisent repository. The copy states what the package does; it is not
-assembled from generic category slogans. Repository names, descriptions, topics,
-primary languages, and README introductions remain the fallback for newly
-created repositories and drive the matching artwork:
+`wisent-banner-bot` uses a curated factual headline and supporting sentence when
+the repository has an explicit product profile. The copy states what the package
+does; it is not assembled from generic category slogans. Descriptions, topics,
+primary languages, and README introductions provide the factual fallback for
+newly created or not-yet-curated repositories and drive the matching artwork:
 
 - routing graphs for gateways and model routers;
 - measured bars for benchmarks and visualization;
@@ -104,12 +104,11 @@ created repositories and drive the matching artwork:
 - latent activation fields for models and safety;
 - coordinated signals for SDKs, clients, and general developer tools.
 
-Every repository name is also used as a deterministic art seed. Repositories in
-the same family therefore vary in topology, density, phase, node count, scale,
-and composition instead of repeating the same graphic. Names with concrete
-meaning override the broad family: `iskra` becomes a spark, `las` a forest,
-`stado` a flock, `brama` a gate, `kronika` a timeline, `probierz` a gauge,
-`skarbiec` a vault, `jeden` a focal point, and `codespy` a scanning field.
+Every repository name is used only as a deterministic art seed. Repositories in
+the same product family therefore vary in topology, density, phase, node count,
+scale, and composition without inferring product purpose from the literal meaning
+of a name. Category and layout come from the repository's documented function,
+topics, language, and README.
 
 Preview decisions without changing GitHub:
 
@@ -124,12 +123,11 @@ to create pull requests. Configure these repository secrets:
 - `WISENT_BANNER_APP_PRIVATE_KEY`.
 
 The app needs repository metadata read access plus Contents and Pull requests
-read/write access. The bot excludes the reference `wisent` repository, skips
-forks and archived repositories, and never replaces an existing manually
-managed banner. Bot-owned README markup is bounded by
-`wisent-banner:start`/`wisent-banner:end` comments, so later runs replace only
-their own block. A source fingerprint prevents unchanged repositories from
-receiving another pull request.
+read/write access. The bot skips forks and archived repositories and never
+replaces an existing manually managed banner. Bot-owned README markup is the
+first rendered block and is bounded by `wisent-banner:start` /
+`wisent-banner:end` comments, so later runs replace only their own block. A source
+fingerprint prevents unchanged repositories from receiving another pull request.
 
 ## Available Styles
 

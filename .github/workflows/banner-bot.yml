@@ -42,5 +42,4 @@ jobs:
           WISENT_BANNER_GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           wisent-banner-bot sync \
-            --org wisent-ai \
-            --exclude wisent
+            --org wisent-ai

@@ -10,7 +10,7 @@ from typing import Dict, Sequence, Tuple
 
 from .banner import BannerConfig
 
-IDENTITY_SCHEMA_VERSION = 5
+IDENTITY_SCHEMA_VERSION = 6
 
 
 @dataclass(frozen=True)
@@ -145,19 +145,6 @@ _CATEGORIES: Dict[str, _Category] = {
     ),
 }
 
-_NAME_LAYOUTS = (
-    (("iskra", "spark"), "spark-left"),
-    (("brama", "gateway", "tama"), "gate-left"),
-    (("las", "forest"), "forest-left"),
-    (("stado", "herd", "fleet"), "flock-left"),
-    (("kronika", "chronicle", "grant"), "timeline-left"),
-    (("probierz", "quality-control", "gauge"), "gauge-left"),
-    (("skarbiec", "vault", "weles"), "vault-left"),
-    (("jeden", "singularity"), "focus-left"),
-    (("codespy", "monitor", "scanner"), "scan-left"),
-    (("heretic", "uncensor"), "fracture-left"),
-    (("ugc", "creator"), "flock-left"),
-)
 
 _PROJECT_COPY: Dict[str, Tuple[str, str]] = {
     "wisent-python": (
@@ -361,7 +348,6 @@ def _normalized_copy(profile: RepositoryProfile) -> str:
 def generate_identity(profile: RepositoryProfile) -> BannerIdentity:
     """Classify repository facts and generate stable, project-specific copy."""
     weighted_text: Sequence[Tuple[str, int]] = (
-        (profile.name.lower(), 4),
         (" ".join(profile.topics).lower(), 3),
         (profile.description.lower(), 2),
         (profile.readme_excerpt.lower(), 1),
@@ -382,10 +368,6 @@ def generate_identity(profile: RepositoryProfile) -> BannerIdentity:
         definition = _CATEGORIES[category]
         title = definition.title.format(name=profile.display_name)
         layout = definition.layout
-    for name_fragments, named_layout in _NAME_LAYOUTS:
-        if any(fragment in profile.name.lower() for fragment in name_fragments):
-            layout = named_layout
-            break
 
     project_copy = _PROJECT_COPY.get(profile.name.lower())
     if project_copy is not None:
