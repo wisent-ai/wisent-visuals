@@ -10,7 +10,7 @@ from typing import Dict, Sequence, Tuple
 
 from .banner import BannerConfig
 
-IDENTITY_SCHEMA_VERSION = 6
+IDENTITY_SCHEMA_VERSION = 7
 
 
 @dataclass(frozen=True)

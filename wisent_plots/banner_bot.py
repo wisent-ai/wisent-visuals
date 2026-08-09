@@ -30,6 +30,8 @@ BANNER_END = "<!-- wisent-banner:end -->"
 BANNER_PATH = "assets/readme-banner.webp"
 SVG_PATH = "assets/readme-banner.svg"
 CONFIG_PATH = ".github/banner.toml"
+SIGNALS_START = "<!-- wisent-readme-signals:start -->"
+SIGNALS_END = "<!-- wisent-readme-signals:end -->"
 
 
 @dataclass(frozen=True)
@@ -42,6 +44,8 @@ class RepositoryPlan:
     identity: BannerIdentity
     readme: str
     reason: str
+    manage_banner: bool
+    empty: bool
 
 
 class GitHubClient:
@@ -147,6 +151,47 @@ class GitHubClient:
         encoded_path = urllib.parse.quote(path, safe="/")
         self.request("PUT", f"/repos/{owner}/{repository}/contents/{encoded_path}", payload)
 
+    def create_initial_commit(
+        self,
+        owner: str,
+        repository: str,
+        default_branch: str,
+        files: Mapping[str, bytes],
+    ) -> str:
+        tree_entries = []
+        for path, content in files.items():
+            blob = self.request(
+                "POST",
+                f"/repos/{owner}/{repository}/git/blobs",
+                {
+                    "content": base64.b64encode(content).decode("ascii"),
+                    "encoding": "base64",
+                },
+            )
+            tree_entries.append(
+                {"path": path, "mode": "100644", "type": "blob", "sha": blob["sha"]}
+            )
+        tree = self.request(
+            "POST",
+            f"/repos/{owner}/{repository}/git/trees",
+            {"tree": tree_entries},
+        )
+        commit = self.request(
+            "POST",
+            f"/repos/{owner}/{repository}/git/commits",
+            {
+                "message": "docs: add personalized README banner and buttons",
+                "tree": tree["sha"],
+                "parents": [],
+            },
+        )
+        self.request(
+            "POST",
+            f"/repos/{owner}/{repository}/git/refs",
+            {"ref": f"refs/heads/{default_branch}", "sha": commit["sha"]},
+        )
+        return commit["html_url"]
+
     def open_pull_request(
         self,
         owner: str,
@@ -165,14 +210,15 @@ class GitHubClient:
             "POST",
             f"/repos/{owner}/{repository}/pulls",
             {
-                "title": "Add personalized Wisent README banner",
+                "title": "Add personalized Wisent README banner and buttons",
                 "head": branch,
                 "base": default_branch,
                 "body": (
-                    "Adds a banner generated from the repository description, topics, language, "
-                    f"and README. Semantic family: `{identity.category}`.\n\n"
-                    "The committed image is deterministic and remains editable through "
-                    f"`{CONFIG_PATH}`."
+                    "Adds a deterministic banner generated from repository facts and a compact "
+                    f"button strip linking to `{owner}/{repository}`, its issues, Wisent, "
+                    "Discord, LinkedIn, X, and the enterprise contact route.\n\n"
+                    "Bot-owned README markup is bounded by explicit comments. Generated banner "
+                    f"assets remain editable through `{CONFIG_PATH}`."
                 ),
             },
         )
@@ -213,30 +259,109 @@ def _has_manual_banner(readme: str) -> bool:
     )
 
 
-def update_readme(readme: str, repository_name: str) -> str:
-    """Keep the bot-owned banner as the README's first rendered block."""
-    if _has_manual_banner(readme):
-        return readme
-    block = "\n".join(
-        [
-            BANNER_START,
-            '<p align="center">',
-            f'  <img src="{BANNER_PATH}" alt="{repository_name} by Wisent" width="100%">',
-            "</p>",
-            BANNER_END,
-        ]
+def _signals_block(owner: str, repository: str) -> str:
+    encoded = urllib.parse.quote(repository, safe="")
+    repository_url = f"https://github.com/{owner}/{encoded}"
+    buttons = [
+        (
+            "Source",
+            "https://img.shields.io/badge/GitHub-Source-181717?logo=github",
+            repository_url,
+        ),
+        (
+            "Issues",
+            "https://img.shields.io/badge/GitHub-Issues-181717?logo=github",
+            f"{repository_url}/issues",
+        ),
+        (
+            "Wisent",
+            "https://img.shields.io/badge/Wisent-Website-0B0B0B",
+            "https://wisent.ai",
+        ),
+        (
+            "Discord",
+            "https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&logoColor=white",
+            "https://discord.gg/qRjpkthq54",
+        ),
+        (
+            "LinkedIn",
+            "https://img.shields.io/badge/LinkedIn-Follow-0A66C2?logo=linkedin&logoColor=white",
+            "https://www.linkedin.com/company/wisent-ai/",
+        ),
+        (
+            "X",
+            "https://img.shields.io/badge/X-Follow-000000?logo=x&logoColor=white",
+            "https://x.com/wisentai",
+        ),
+        (
+            "Enterprise",
+            "https://img.shields.io/badge/Enterprise-Book%20a%20call-0B0B0B?logo=calendly",
+            "https://calendly.com/lbartoszcze",
+        ),
+    ]
+    row = " ".join(f"[![{label}]({image})]({target})" for label, image, target in buttons)
+    return "\n".join((SIGNALS_START, row, SIGNALS_END))
+
+
+def _remove_signals(readme: str) -> str:
+    pattern = re.compile(
+        r"\n*" + re.escape(SIGNALS_START) + r".*?" + re.escape(SIGNALS_END) + r"\n*",
+        re.DOTALL,
     )
-    body = readme
-    if BANNER_START in body and BANNER_END in body:
-        pattern = re.compile(
-            re.escape(BANNER_START) + r".*?" + re.escape(BANNER_END),
-            re.DOTALL,
+    return pattern.sub("\n\n", readme, count=1).strip("\n")
+
+
+def _insert_signals(readme: str, block: str) -> str:
+    if BANNER_END in readme:
+        position = readme.index(BANNER_END) + len(BANNER_END)
+        prefix = readme[:position].rstrip("\n")
+        suffix = readme[position:].lstrip("\n")
+        return f"{prefix}\n\n{block}\n\n{suffix}"
+
+    manual_patterns = (
+        (r"<p\b[^>]*>.*?banner\.(?:png|webp|svg).*?</p>", re.IGNORECASE | re.DOTALL),
+        (
+            r"<picture\b[^>]*>.*?banner\.(?:png|webp|svg).*?</picture>",
+            re.IGNORECASE | re.DOTALL,
+        ),
+        (
+            r"^.*!\[[^]]*\]\([^)\n]*banner\.(?:png|webp|svg)[^)\n]*\).*$",
+            re.IGNORECASE | re.MULTILINE,
+        ),
+    )
+    for pattern, flags in manual_patterns:
+        match = re.search(pattern, readme, flags)
+        if match is not None:
+            prefix = readme[: match.end()].rstrip("\n")
+            suffix = readme[match.end() :].lstrip("\n")
+            return f"{prefix}\n\n{block}\n\n{suffix}"
+    return f"{block}\n\n{readme.lstrip()}"
+
+
+def update_readme(readme: str, repository_name: str, owner: str = "wisent-ai") -> str:
+    """Keep the banner first and a compact, source-backed button strip directly below it."""
+    body = _remove_signals(readme)
+    if not _has_manual_banner(body):
+        block = "\n".join(
+            [
+                BANNER_START,
+                '<p align="center">',
+                f'  <img src="{BANNER_PATH}" alt="{repository_name} by Wisent" width="100%">',
+                "</p>",
+                BANNER_END,
+            ]
         )
-        body = pattern.sub("", body, count=1)
-    body = body.lstrip("\n")
-    if not body.strip():
-        body = f"# {repository_name}\n"
-    return f"{block}\n\n{body}"
+        if BANNER_START in body and BANNER_END in body:
+            pattern = re.compile(
+                re.escape(BANNER_START) + r".*?" + re.escape(BANNER_END),
+                re.DOTALL,
+            )
+            body = pattern.sub("", body, count=1)
+        body = body.lstrip("\n")
+        if not body.strip():
+            body = f"# {repository_name}\n"
+        body = f"{block}\n\n{body}"
+    return _insert_signals(body, _signals_block(owner, repository_name))
 
 
 class BannerBot:
@@ -271,15 +396,21 @@ class BannerBot:
                 readme_excerpt=_readme_excerpt(readme),
             )
             identity = generate_identity(profile)
+            manage_banner = not _has_manual_banner(readme)
             managed_fingerprint = _managed_fingerprint(config)
-            if managed_fingerprint == identity.fingerprint:
-                continue
-            if not managed_fingerprint and _has_manual_banner(readme):
+            banner_current = managed_fingerprint == identity.fingerprint
+            readme_current = update_readme(readme, name, organization) == readme
+            if readme_current and (not manage_banner or banner_current):
                 continue
             if limit and emitted >= limit:
                 return
             emitted += 1
-            reason = "new repository" if config is None else "repository identity changed"
+            if not readme_current and (not manage_banner or banner_current):
+                reason = "README buttons missing or stale"
+            elif config is None:
+                reason = "new repository"
+            else:
+                reason = "repository identity changed"
             yield RepositoryPlan(
                 owner=organization,
                 name=name,
@@ -287,20 +418,35 @@ class BannerBot:
                 identity=identity,
                 readme=readme,
                 reason=reason,
+                manage_banner=manage_banner,
+                empty=repository.get("size", 0) == 0,
             )
 
     def apply(self, plan: RepositoryPlan) -> str:
-        branch = f"wisent-banner-bot/{plan.identity.fingerprint}"
-        self.client.ensure_branch(plan.owner, plan.name, plan.default_branch, branch)
-        banner = Banner(plan.identity.as_config())
-        raster = io.BytesIO()
-        banner.render_image().save(raster, "WEBP", quality=90, method=6, exact=True)
         files = {
-            CONFIG_PATH: plan.identity.to_toml().encode("utf-8"),
-            SVG_PATH: banner.render_svg().encode("utf-8"),
-            BANNER_PATH: raster.getvalue(),
-            "README.md": update_readme(plan.readme, plan.name).encode("utf-8"),
+            "README.md": update_readme(plan.readme, plan.name, plan.owner).encode("utf-8"),
         }
+        if plan.manage_banner:
+            banner = Banner(plan.identity.as_config())
+            raster = io.BytesIO()
+            banner.render_image().save(raster, "WEBP", quality=90, method=6, exact=True)
+            files.update(
+                {
+                    CONFIG_PATH: plan.identity.to_toml().encode("utf-8"),
+                    SVG_PATH: banner.render_svg().encode("utf-8"),
+                    BANNER_PATH: raster.getvalue(),
+                }
+            )
+        if plan.empty:
+            return self.client.create_initial_commit(
+                plan.owner,
+                plan.name,
+                plan.default_branch,
+                files,
+            )
+
+        branch = f"wisent-readme-bot/{plan.identity.fingerprint}"
+        self.client.ensure_branch(plan.owner, plan.name, plan.default_branch, branch)
         for path, content in files.items():
             existing = self.client.read_content(plan.owner, plan.name, path, branch)
             if existing is not None and existing[0] == content:
@@ -312,7 +458,7 @@ class BannerBot:
                 path,
                 branch,
                 content,
-                "chore: generate personalized README banner",
+                "docs: add personalized README banner and buttons",
                 current_sha,
             )
         return self.client.open_pull_request(
