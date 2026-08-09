@@ -293,10 +293,19 @@ def _signals_block(owner: str, repository: str) -> str:
 
 def _remove_signals(readme: str) -> str:
     pattern = re.compile(
-        r"\n*" + re.escape(SIGNALS_START) + r".*?" + re.escape(SIGNALS_END) + r"\n*",
+        re.escape(SIGNALS_START) + r".*?" + re.escape(SIGNALS_END),
         re.DOTALL,
     )
-    return pattern.sub("\n\n", readme, count=1).strip("\n")
+    match = pattern.search(readme)
+    if match is None:
+        return readme
+    prefix = readme[: match.start()].rstrip("\n")
+    suffix = readme[match.end() :].lstrip("\n")
+    if prefix and suffix:
+        return f"{prefix}\n\n{suffix}"
+    if prefix:
+        return prefix + ("\n" if readme.endswith("\n") else "")
+    return suffix
 
 
 def _insert_signals(readme: str, block: str) -> str:
