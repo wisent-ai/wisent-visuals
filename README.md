@@ -10,7 +10,16 @@
 
 # Wisent Visuals
 
-Create beautiful, brand-styled plots with ease. This package provides ready-to-use chart types that follow Wisent's visual identity guidelines.
+Charts That Already Look Like Your Company.
+
+Every deck ends the same way: someone re-colours a matplotlib default at midnight
+so the chart does not look like a lab report. Wisent Visuals gives you the chart
+types you actually use, already carrying the brand — colours, type, spacing and
+the small decisions nobody wants to make twice. Call one function and get a
+figure you can put in front of a customer. Your plots stop being the weakest
+slide in the room.
+
+Brand-Ready Plots, One Import Away.
 
 ## Features
 
