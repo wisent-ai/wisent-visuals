@@ -99,13 +99,14 @@ produces byte-identical output for the same configuration. Commit both the TOML
 configuration and generated assets; CI can rerun this command and use
 `git diff --exit-code` to detect stale output.
 
-### Automatic organization-wide personalization
+### Automatic organization-wide presentation
 
-`wisent-banner-bot` uses a curated factual headline and supporting sentence when
-the repository has an explicit product profile. The copy states what the package
-does; it is not assembled from generic category slogans. Descriptions, topics,
-primary languages, and README introductions provide the factual fallback for
-newly created or not-yet-curated repositories and drive the matching artwork:
+`wisent-banner-bot` never writes product copy from repository metadata. Approved
+titles and optional descriptions live in
+`wisent_plots/approved_copy.json`, with the conversation session and timestamp
+that authorized each entry.
+
+Repository descriptions, topics, languages, and README text select artwork only:
 
 - routing graphs for gateways and model routers;
 - measured bars for benchmarks and visualization;
@@ -115,11 +116,9 @@ newly created or not-yet-curated repositories and drive the matching artwork:
 - latent activation fields for models and safety;
 - coordinated signals for SDKs, clients, and general developer tools.
 
-Every repository name is used only as a deterministic art seed. Repositories in
-the same product family therefore vary in topology, density, phase, node count,
-scale, and composition without inferring product purpose from the literal meaning
-of a name. Category and layout come from the repository's documented function,
-topics, language, and README.
+A repository without approved copy receives only its display name and no
+description. The generated TOML records `copy_status` and `approved_in`; changing
+the approval register changes the source fingerprint and regenerates the assets.
 
 Preview decisions without changing GitHub:
 
