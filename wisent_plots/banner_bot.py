@@ -9,6 +9,7 @@ import json
 import os
 import re
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -71,16 +72,23 @@ class GitHubClient:
         }
         if self.token:
             headers["Authorization"] = f"Bearer {self.token}"
-        request = urllib.request.Request(url, data=data, method=method, headers=headers)
-        try:
-            with urllib.request.urlopen(request, timeout=30) as response:
-                body = response.read()
-                return json.loads(body) if body else None
-        except urllib.error.HTTPError as error:
-            if allow_missing and error.code == 404:
-                return None
-            detail = error.read().decode("utf-8", errors="replace")
-            raise RuntimeError(f"GitHub {method} {path} failed ({error.code}): {detail}") from error
+        for attempt in range(3):
+            request = urllib.request.Request(url, data=data, method=method, headers=headers)
+            try:
+                with urllib.request.urlopen(request, timeout=30) as response:
+                    body = response.read()
+                    return json.loads(body) if body else None
+            except urllib.error.HTTPError as error:
+                if allow_missing and error.code == 404:
+                    return None
+                if error.code in {500, 502, 503, 504} and attempt < 2:
+                    error.close()
+                    time.sleep(2**attempt)
+                    continue
+                detail = error.read().decode("utf-8", errors="replace")
+                raise RuntimeError(
+                    f"GitHub {method} {path} failed ({error.code}): {detail}"
+                ) from error
 
     def list_repositories(self, organization: str) -> Iterable[Mapping[str, Any]]:
         page = 1
