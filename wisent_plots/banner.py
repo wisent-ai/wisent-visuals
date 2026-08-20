@@ -61,8 +61,6 @@ class BannerConfig:
     def __post_init__(self) -> None:
         if not self.title.strip():
             raise ValueError("title must not be empty")
-        if not self.description.strip():
-            raise ValueError("description must not be empty")
         if self.layout not in SUPPORTED_LAYOUTS:
             raise ValueError(f"layout must be one of: {', '.join(SUPPORTED_LAYOUTS)}")
         if self.theme not in SUPPORTED_THEMES:

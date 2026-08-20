@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "entries": {
+    "stado": {"title": "Stado: The Easiest Harness for Managing Compute and Storage Across Local, GCP, AWS, and Azure Infrastructure", "description": "", "approved_in": "019fe3db-84a1-7000-bf79-c5455aefd43f@2026-08-09T23:59:29Z"},
+    "skarbiec": {"title": "Skarbiec: Secrets and Authentication Management for the AI Agent Era", "description": "", "approved_in": "019fe3db-84a1-7000-bf79-c5455aefd43f@2026-08-09T23:59:29Z"},
+    "brama": {"title": "Brama: Keep All Your Models Accessible Through One Endpoint", "description": "", "approved_in": "019fe3db-84a1-7000-bf79-c5455aefd43f@2026-08-09T23:59:29Z"},
+    "jeden": {"title": "Jeden: The Ultimate Self-Improving Coding Agent with Internet Access, Embedded Secret Management, QA, and More", "description": "", "approved_in": "019fe3db-84a1-7000-bf79-c5455aefd43f@2026-08-09T23:59:29Z"},
+    "weles": {"title": "Weles: Undetectable Browser for Perfect AI Agent Internet Use", "description": "", "approved_in": "019fe3db-84a1-7000-bf79-c5455aefd43f@2026-08-09T23:59:29Z"},
+    "oko": {"title": "Oko: Understand What Your AI-Native Team Is Working On—and Why", "description": "", "approved_in": "019fe3db-84a1-7000-bf79-c5455aefd43f@2026-08-09T23:59:29Z"},
+    "las": {"title": "Las: Every Tool Your AI Agents Need Through One MCP", "description": "", "approved_in": "019fe3db-84a1-7000-bf79-c5455aefd43f@2026-08-09T23:59:29Z"},
+    "most": {"title": "Most: The Easiest Way to Add iMessage and SMS to Your AI Agent Stack", "description": "", "approved_in": "019fe3db-84a1-7000-bf79-c5455aefd43f@2026-08-09T23:59:29Z"},
+    "transcript-lake": {"title": "Transcript Lake: All the Knowledge from Your AI Agent Conversations, Organized", "description": "", "approved_in": "019fe3db-84a1-7000-bf79-c5455aefd43f@2026-08-09T23:59:29Z"},
+    "lem": {"title": "Lem: The AI Research and Conference Management Tool That Fully Automates Research", "description": "", "approved_in": "019fe3db-84a1-7000-bf79-c5455aefd43f@2026-08-09T23:59:29Z"},
+    "probierz": {"title": "Probierz: AI QA That Makes Sure You Never Ship Anything Broken", "description": "", "approved_in": "019fe3db-84a1-7000-bf79-c5455aefd43f@2026-08-09T23:59:29Z"},
+    "tama-desktop": {"title": "Tama: Never Get Frustrated by AI Again—Block the Behaviors You Don’t Want", "description": "", "approved_in": "019fe3db-84a1-7000-bf79-c5455aefd43f@2026-08-09T23:59:29Z"},
+    "kronika": {"title": "Kronika: Perfect Documentation Built Only from Repository Truth", "description": "", "approved_in": "019fe3db-84a1-7000-bf79-c5455aefd43f@2026-08-09T23:59:29Z"},
+    "echo-web": {"title": "Echo: AI GTM—Manage B2B Outreach, UGC, Meta Ads, and Google Ads from One Harness", "description": "", "approved_in": "019fe3db-84a1-7000-bf79-c5455aefd43f@2026-08-09T23:59:29Z"},
+    "singularity": {"title": "Singularity: Autonomous AI Agents That Pay for Themselves", "description": "", "approved_in": "019fe3db-84a1-7000-bf79-c5455aefd43f@2026-08-09T23:59:29Z"},
+    "byk-ios": {"title": "Byk: Make Money with AI Trading", "description": "", "approved_in": "019fe3db-84a1-7000-bf79-c5455aefd43f@2026-08-09T23:59:29Z"},
+    "ster": {"title": "Ster", "description": "", "approved_in": "agent-copy-repair-plan@2026-08-20"}
+  }
+}
