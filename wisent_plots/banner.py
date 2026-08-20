@@ -51,7 +51,7 @@ class BannerConfig:
     title: str
     description: str
     product: str = "Wisent"
-    url: str = "wisent.ai"
+    url: str = "wisent.com"
     theme: str = "dark"
     layout: str = "latent-field-left"
     art_seed: str = ""

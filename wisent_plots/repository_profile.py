@@ -10,7 +10,7 @@ from typing import Dict, Sequence, Tuple
 
 from .banner import BannerConfig
 
-IDENTITY_SCHEMA_VERSION = 7
+IDENTITY_SCHEMA_VERSION = 8
 
 
 @dataclass(frozen=True)
@@ -79,7 +79,7 @@ class BannerIdentity:
                 f"title = {quote(self.title)}",
                 f"description = {quote(self.description)}",
                 'product = "Wisent"',
-                'url = "wisent.ai"',
+                'url = "wisent.com"',
                 'theme = "dark"',
                 f"layout = {quote(self.layout)}",
                 f"art_seed = {quote(self.art_seed)}",
