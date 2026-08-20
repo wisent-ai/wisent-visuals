@@ -120,6 +120,14 @@ A repository without approved copy receives only its display name and no
 description. The generated TOML records `copy_status` and `approved_in`; changing
 the approval register changes the source fingerprint and regenerates the assets.
 
+Descriptions previously introduced by the removed copy table are listed in
+`wisent_plots/unapproved_descriptions.json`. Clear only those audited values
+with:
+
+```bash
+wisent-banner-bot clear-unapproved-descriptions --org wisent-ai
+```
+
 Preview decisions without changing GitHub:
 
 ```bash
