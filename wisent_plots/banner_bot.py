@@ -474,7 +474,7 @@ class BannerBot:
                 reason=reason,
                 manage_banner=manage_banner,
                 remove_legacy_banner=remove_legacy_banner,
-                empty=repository.get("size", 0) == 0,
+                empty=readme_file is None and repository.get("size", 0) == 0,
             )
 
     def apply(self, plan: RepositoryPlan, direct: bool = False) -> str:
