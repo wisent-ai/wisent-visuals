@@ -264,7 +264,7 @@ def _signals_block(owner: str, repository: str) -> str:
         (
             "Wisent",
             "https://img.shields.io/badge/Wisent-Website-0B0B0B",
-            "https://wisent.ai",
+            "https://wisent.com",
         ),
         (
             "Discord",
