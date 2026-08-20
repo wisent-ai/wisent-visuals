@@ -32,6 +32,7 @@ BANNER_PATH = "assets/readme-banner.webp"
 SVG_PATH = "assets/readme-banner.svg"
 CONFIG_PATH = ".github/banner.toml"
 SIGNALS_START = "<!-- wisent-readme-signals:start -->"
+LEGACY_BANNER_PATH = "banner.png"
 SIGNALS_END = "<!-- wisent-readme-signals:end -->"
 
 
@@ -47,6 +48,7 @@ class RepositoryPlan:
     reason: str
     manage_banner: bool
     empty: bool
+    remove_legacy_banner: bool = False
 
 
 class GitHubClient:
@@ -159,6 +161,23 @@ class GitHubClient:
         encoded_path = urllib.parse.quote(path, safe="/")
         self.request("PUT", f"/repos/{owner}/{repository}/contents/{encoded_path}", payload)
 
+    def delete_content(
+        self,
+        owner: str,
+        repository: str,
+        path: str,
+        branch: str,
+        message: str,
+        current_sha: str,
+    ) -> None:
+        encoded_path = urllib.parse.quote(path, safe="/")
+        self.request(
+            "DELETE",
+            f"/repos/{owner}/{repository}/contents/{encoded_path}",
+            {"message": message, "sha": current_sha, "branch": branch},
+        )
+
+
     def create_initial_commit(
         self,
         owner: str,
@@ -247,8 +266,29 @@ def _managed_fingerprint(config: Optional[Tuple[bytes, str]]) -> str:
     return str(automation.get("source_fingerprint", ""))
 
 
+def _opening_legacy_banner(readme: str) -> bool:
+    return (
+        re.match(
+            r'\A\s*<p\b[^>]*>\s*<img\b[^>]*\bsrc=["\']banner\.png["\'][^>]*>\s*</p>\s*',
+            readme,
+            re.IGNORECASE,
+        )
+        is not None
+    )
+
+
+def _remove_opening_legacy_banner(readme: str) -> str:
+    return re.sub(
+        r'\A\s*<p\b[^>]*>\s*<img\b[^>]*\bsrc=["\']banner\.png["\'][^>]*>\s*</p>\s*',
+        "",
+        readme,
+        count=1,
+        flags=re.IGNORECASE,
+    )
+
+
 def _has_manual_banner(readme: str) -> bool:
-    if BANNER_START in readme:
+    if BANNER_START in readme or _opening_legacy_banner(readme):
         return False
     return (
         re.search(r"(?:src=|!\[[^]]*\]\()[^\n)]*banner\.(?:png|webp|svg)", readme, re.I) is not None
@@ -346,6 +386,7 @@ def _insert_signals(readme: str, block: str) -> str:
 def update_readme(readme: str, repository_name: str, owner: str = "wisent-ai") -> str:
     """Keep the banner first and a compact, source-backed button strip directly below it."""
     body = _remove_signals(readme)
+    body = _remove_opening_legacy_banner(body)
     if not _has_manual_banner(body):
         block = "\n".join(
             [
@@ -409,6 +450,7 @@ class BannerBot:
             )
             identity = generate_identity(profile)
             manage_banner = not _has_manual_banner(readme)
+            remove_legacy_banner = _opening_legacy_banner(readme)
             managed_fingerprint = _managed_fingerprint(config)
             banner_current = managed_fingerprint == identity.fingerprint
             readme_current = update_readme(readme, name, organization) == readme
@@ -431,6 +473,7 @@ class BannerBot:
                 readme=readme,
                 reason=reason,
                 manage_banner=manage_banner,
+                remove_legacy_banner=remove_legacy_banner,
                 empty=repository.get("size", 0) == 0,
             )
 
@@ -476,6 +519,22 @@ class BannerBot:
                     "docs: add personalized README banner and buttons [skip ci]",
                     current_sha,
                 )
+            if plan.remove_legacy_banner:
+                legacy = self.client.read_content(
+                    plan.owner,
+                    plan.name,
+                    LEGACY_BANNER_PATH,
+                    plan.default_branch,
+                )
+                if legacy is not None:
+                    self.client.delete_content(
+                        plan.owner,
+                        plan.name,
+                        LEGACY_BANNER_PATH,
+                        plan.default_branch,
+                        "docs: remove superseded README banner [skip ci]",
+                        legacy[1],
+                    )
             return f"https://github.com/{plan.owner}/{plan.name}"
 
         branch = f"wisent-readme-bot/{plan.identity.fingerprint}"
@@ -494,6 +553,22 @@ class BannerBot:
                 "docs: add personalized README banner and buttons",
                 current_sha,
             )
+        if plan.remove_legacy_banner:
+            legacy = self.client.read_content(
+                plan.owner,
+                plan.name,
+                LEGACY_BANNER_PATH,
+                branch,
+            )
+            if legacy is not None:
+                self.client.delete_content(
+                    plan.owner,
+                    plan.name,
+                    LEGACY_BANNER_PATH,
+                    branch,
+                    "docs: remove superseded README banner",
+                    legacy[1],
+                )
         return self.client.open_pull_request(
             plan.owner,
             plan.name,
