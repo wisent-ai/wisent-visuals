@@ -60,6 +60,7 @@ include = ["wisent_plots*"]
 wisent_plots = [
     "assets/*.svg",
     "approved_copy.json",
+    "unapproved_descriptions.json",
     "assets/*.png",
     "assets/large/*.svg",
     "assets/fonts/*.ttf",
