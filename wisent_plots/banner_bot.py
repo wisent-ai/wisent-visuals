@@ -383,8 +383,13 @@ def _insert_signals(readme: str, block: str) -> str:
     return f"{block}\n\n{readme.lstrip()}"
 
 
-def update_readme(readme: str, repository_name: str, owner: str = "wisent-ai") -> str:
-    """Keep the banner first and a compact, source-backed button strip directly below it."""
+def update_readme(
+    readme: str,
+    repository_name: str,
+    owner: str = "wisent-ai",
+    approved_title: str = "",
+) -> str:
+    """Keep generated presentation first and preserve approved product copy."""
     body = _remove_signals(readme)
     body = _remove_opening_legacy_banner(body)
     if not _has_manual_banner(body):
@@ -405,9 +410,16 @@ def update_readme(readme: str, repository_name: str, owner: str = "wisent-ai") -
             body = pattern.sub("", body, count=1)
         body = body.lstrip("\n")
         if not body.strip():
-            body = f"# {repository_name}\n"
+            body = f"# {approved_title or repository_name}\n"
         body = f"{block}\n\n{body}"
-    return _insert_signals(body, _signals_block(owner, repository_name))
+    body = _insert_signals(body, _signals_block(owner, repository_name))
+    if approved_title:
+        heading = re.compile(r"^# .+$", re.MULTILINE)
+        if heading.search(body):
+            body = heading.sub(f"# {approved_title}", body, count=1)
+        else:
+            body = f"{body.rstrip()}\n\n# {approved_title}\n"
+    return body
 
 
 class BannerBot:
@@ -453,7 +465,12 @@ class BannerBot:
             remove_legacy_banner = _opening_legacy_banner(readme)
             managed_fingerprint = _managed_fingerprint(config)
             banner_current = managed_fingerprint == identity.fingerprint
-            readme_current = update_readme(readme, name, organization) == readme
+            readme_current = update_readme(
+                readme,
+                name,
+                organization,
+                identity.title if identity.copy_status == "approved" else "",
+            ) == readme
             if readme_current and (not manage_banner or banner_current):
                 continue
             if limit and emitted >= limit:
@@ -479,7 +496,12 @@ class BannerBot:
 
     def apply(self, plan: RepositoryPlan, direct: bool = False) -> str:
         files = {
-            "README.md": update_readme(plan.readme, plan.name, plan.owner).encode("utf-8"),
+            "README.md": update_readme(
+                plan.readme,
+                plan.name,
+                plan.owner,
+                plan.identity.title if plan.identity.copy_status == "approved" else "",
+            ).encode("utf-8"),
         }
         if plan.manage_banner:
             banner = Banner(plan.identity.as_config())
