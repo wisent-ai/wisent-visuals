@@ -128,6 +128,12 @@ with:
 wisent-banner-bot clear-unapproved-descriptions --org wisent-ai
 ```
 
+Synchronize every repository description with the same approved registry:
+
+```bash
+wisent-banner-bot sync-approved-descriptions --org wisent-ai
+```
+
 Preview decisions without changing GitHub:
 
 ```bash
