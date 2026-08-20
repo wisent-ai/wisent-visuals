@@ -1,11 +1,13 @@
 [automation]
 managed = true
-source_fingerprint = "b0c9b083d97dca99"
+source_fingerprint = "69d38f66108cdddd"
 category = "visualization"
+copy_status = "missing"
+approved_in = ""
 
 [banner]
-title = "Wisent charts. Ready to publish."
-description = "Python package for producing charts and README banners in the Wisent visual system."
+title = "Wisent Visuals"
+description = ""
 product = "Wisent"
 url = "wisent.com"
 theme = "dark"
