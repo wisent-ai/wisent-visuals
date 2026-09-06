@@ -31,6 +31,9 @@ dependencies = [
     "matplotlib>=3.5.0",
     "numpy>=1.20.0",
 ]
+[project.scripts]
+wisent-visuals-release = "wisent_release.__main__:entrypoint"
+
 
 [project.optional-dependencies]
 dev = [
@@ -48,7 +51,7 @@ Issues = "https://github.com/wisent/wisent-visuals/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["wisent_plots*"]
+include = ["wisent_plots*", "wisent_release*"]
 
 [tool.setuptools.package-data]
 wisent_plots = ["assets/*.svg", "assets/large/*.svg"]
