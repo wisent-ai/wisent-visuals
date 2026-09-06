@@ -3,7 +3,7 @@ name: Version check
 # Refuse a change whose declared version disagrees with what it did to the public
 # contract. The contract of this library is what a caller can import and call: the names
 # each module puts in __all__, the public methods of the classes it exports, and the keys
-# of the style registry it exports. scripts/surface.py explains why that is the set.
+# of the style registry it exports. `python3 -m wisent_release surface` explains why that is the set.
 #
 # The rule itself lives in one place for the whole fleet and is not copied here:
 # https://github.com/lbartoszcze/AutoVersion. This workflow supplies only the two
@@ -68,7 +68,7 @@ jobs:
         # stays cheap and cannot be broken by an unrelated dependency. A module that does
         # not parse, or an __all__ that is not a literal list, fails the step rather than
         # silently shrinking the surface.
-        run: python3 scripts/surface.py > "$RUNNER_TEMP/candidate.json"
+        run: python3 -m wisent_release surface > "$RUNNER_TEMP/candidate.json"
 
       - name: Agree with yourself about the version
         # This package states its version twice: pyproject.toml is what PyPI publishes,
@@ -173,7 +173,7 @@ jobs:
           set -euo pipefail
           # released-surface.json must describe an artifact somebody can install, and the
           # claim is machine-readable: the first token of "source" is a provenance marker
-          # written by scripts/baseline.py. The assertion runs both ways, because both
+          # written by `python3 -m wisent_release baseline`. The assertion runs both ways,
           # directions are a real failure. Forward: a baseline claiming a registry
           # artifact must be served by that registry, or it was hand-edited and every
           # later comparison is measured against something nobody can install. Reverse: a
@@ -202,7 +202,7 @@ jobs:
           echo "marker:   $marker"
 
           # Nothing in this job reads a git ref, and that is a decision, not an
-          # omission. scripts/baseline.py resolves the baseline from PyPI alone: it
+          # omission. `python3 -m wisent_release baseline` resolves the baseline from PyPI alone: it
           # mints pypi-sdist and pypi-wheel, and refuses outright when the published
           # release offers neither, rather than degrading to a tag or to HEAD (its
           # `head` constant is never written). So the non-registry arm below is
@@ -212,7 +212,7 @@ jobs:
           # lists no tags and this repository serves no GitHub Release.
           #
           # What revokes this: a non-pypi marker landing in released-surface.json, a
-          # git tier appearing in scripts/baseline.py, or origin serving a tag or a
+          # git tier appearing in `python3 -m wisent_release baseline`, or origin serving a tag or a
           # Release. Then absence must be established AT ORIGIN — `git ls-remote
           # --tags origin`, because checkout fetches no tags so a local listing is
           # empty on a runner whatever origin holds, and a fork shares the upstream's
@@ -222,7 +222,7 @@ jobs:
             pypi-*) claims_registry=yes ;;
             stado:*|git-archive:*|head:*) claims_registry=no ;;
             *)
-              echo "::error::unknown baseline marker: $marker. scripts/baseline.py writes" \
+              echo "::error::unknown baseline marker: $marker. python3 -m wisent_release baseline writes" \
                 "the marker; released-surface.json was edited by something else."
               false
               ;;
@@ -289,13 +289,13 @@ jobs:
           if [ "$claims_registry" = yes ]; then
             if [ "$serves" != yes ]; then
               echo "::error::released-surface.json claims $marker, but PyPI states it does" \
-                "not serve $project at all. Regenerate it with scripts/baseline.py."
+                "not serve $project at all. Regenerate it with python3 -m wisent_release baseline."
               false
             fi
             if ! jq -e --arg v "$released" '.releases | has($v)' \
                  "$tmp/subject.json" >/dev/null; then
               echo "::error::released-surface.json claims $marker, but PyPI does not serve" \
-                "$project $released. Regenerate it with scripts/baseline.py."
+                "$project $released. Regenerate it with python3 -m wisent_release baseline."
               false
             fi
             echo "PyPI serves the $released artifact this baseline claims."
@@ -306,7 +306,7 @@ jobs:
             # every later decision is measured against a contract that is no longer the
             # released one. The marker stays truthful throughout, which is exactly why the
             # bidirectional check cannot notice. `info.version` is the same source of truth
-            # scripts/baseline.py resolves to pick its artifact, so this asserts the
+            # `python3 -m wisent_release baseline` resolves to pick its artifact, so this asserts the
             # committed file still agrees with it — it regenerates nothing and lets no
             # recomputed surface near the decision.
             latest="$(jq -r .info.version "$tmp/subject.json")"
@@ -314,7 +314,7 @@ jobs:
               echo "::error::released-surface.json is pinned to $released, but PyPI now" \
                 "serves $latest as the latest release of $project. The baseline is a" \
                 "superseded artifact, so every comparison is measured against a contract" \
-                "that is no longer the released one. Regenerate with scripts/baseline.py."
+                "that is no longer the released one. Regenerate with python3 -m wisent_release baseline."
               false
             fi
             echo "Baseline $released is still the latest release."
@@ -322,7 +322,7 @@ jobs:
             if [ "$serves" = yes ]; then
               echo "::error::released-surface.json claims $marker, i.e. nothing published," \
                 "but PyPI does serve $project. The baseline is dodging a real release." \
-                "Regenerate it with scripts/baseline.py."
+                "Regenerate it with python3 -m wisent_release baseline."
               false
             fi
             echo "PyPI states it does not serve $project, as the $marker baseline claims."

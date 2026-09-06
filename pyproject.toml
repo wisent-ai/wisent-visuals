@@ -33,6 +33,9 @@ dependencies = [
     "Pillow>=9.2.0",
     "tomli>=2.0.0; python_version < '3.11'",
 ]
+[project.scripts]
+wisent-visuals-release = "wisent_release.__main__:entrypoint"
+
 
 [project.scripts]
 wisent-banner = "wisent_plots.banner_cli:main"
@@ -54,7 +57,7 @@ Issues = "https://github.com/wisent/wisent-visuals/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["wisent_plots*"]
+include = ["wisent_plots*", "wisent_release*"]
 
 [tool.setuptools.package-data]
 wisent_plots = [
