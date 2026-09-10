@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def run_cli(arguments, commands, environment=None):
     command = [sys.executable, "-m", "wisent_plots.banner_bot", *arguments]
-    result = subprocess.run(command, cwd=ROOT, env=environment, capture_output=True, text=True)
+    result = subprocess.run(command, env=environment, capture_output=True, text=True)
     commands.append(
         {
             "command": command,
