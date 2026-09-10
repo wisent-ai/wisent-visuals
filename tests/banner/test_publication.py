@@ -133,6 +133,7 @@ def test_sync_publishes_real_artifacts_and_reuses_unchanged_pull_request(tmp_pat
             ".github/banner.toml",
             "assets/readme-banner.svg",
             "assets/readme-banner.webp",
+            ".tama/violations-ignore",
         ):
             stored = client.read_content(owner, repository, path, head)
             assert stored is not None, f"GitHub does not contain the promised artifact: {path}"
@@ -150,6 +151,8 @@ def test_sync_publishes_real_artifacts_and_reuses_unchanged_pull_request(tmp_pat
             assert image.format == "WEBP"
             assert image.size == (int(svg.attrib["width"]), int(svg.attrib["height"]))
             assert any(low != high for low, high in image.getextrema())
+        declared = artifacts[".tama/violations-ignore"].decode("utf-8").splitlines()
+        assert "assets/readme-banner.svg" in declared
         second = run_cli(arguments, report["commands"])
         assert second.returncode == 0, second.stderr
         assert json.loads(second.stdout)["pull_request"] == published["pull_request"]

@@ -6,7 +6,15 @@ from typing import Iterable, Optional, Set, Tuple
 from ..banner import Banner
 from ..identity import RepositoryProfile, generate_identity
 from .github import GitHubClient
-from .model import BANNER_PATH, CONFIG_PATH, LEGACY_BANNER_PATH, SVG_PATH, RepositoryPlan
+from .model import (
+    AUDIT_IGNORE_PATH,
+    BANNER_PATH,
+    CONFIG_PATH,
+    LEGACY_BANNER_PATH,
+    SVG_PATH,
+    RepositoryPlan,
+    audit_declaration,
+)
 from .readme import _has_manual_banner, _opening_legacy_banner, _readme_excerpt, update_readme
 
 try:
@@ -58,6 +66,9 @@ class BannerBot:
             readme_file = self.client.read_content(organization, name, "README.md", default_branch)
             readme = "" if readme_file is None else readme_file[0].decode("utf-8", errors="replace")
             config = self.client.read_content(organization, name, CONFIG_PATH, default_branch)
+            declared = self.client.read_content(
+                organization, name, AUDIT_IGNORE_PATH, default_branch
+            )
 
             profile = RepositoryProfile(
                 name=name,
@@ -101,6 +112,7 @@ class BannerBot:
                 manage_banner=manage_banner,
                 remove_legacy_banner=remove_legacy_banner,
                 empty=readme_file is None and repository.get("size", 0) == 0,
+                audit_ignore=None if declared is None else declared[0].decode("utf-8"),
             )
 
     def apply(self, plan: RepositoryPlan, direct: bool = False) -> str:
@@ -116,6 +128,7 @@ class BannerBot:
             banner = Banner(plan.identity.as_config())
             raster = io.BytesIO()
             banner.render_image().save(raster, "WEBP", quality=90, method=6, exact=True)
+            declaration = audit_declaration(plan.audit_ignore)
             files.update(
                 {
                     CONFIG_PATH: plan.identity.to_toml().encode("utf-8"),
@@ -123,6 +136,8 @@ class BannerBot:
                     BANNER_PATH: raster.getvalue(),
                 }
             )
+            if declaration is not None:
+                files[AUDIT_IGNORE_PATH] = declaration.encode("utf-8")
         if plan.empty:
             return self.client.create_initial_commit(
                 plan.owner,

@@ -153,6 +153,13 @@ first rendered block and is bounded by `wisent-banner:start` /
 `wisent-banner:end` comments, so later runs replace only their own block. A source
 fingerprint prevents unchanged repositories from receiving another pull request.
 
+Every repository the bot writes to also receives `.tama/violations-ignore`
+naming `assets/readme-banner.svg`. The vector banner is a rendered artifact of
+`.github/banner.toml`, so a repository audit should read it as generated output
+rather than ask somebody to split an 800-line file the next run overwrites.
+Existing declarations are appended to, never replaced, and a repository that
+already names the banner is left alone.
+
 ## Available Styles
 
 Area charts provide five SVG styles: solid green bands (1), gradients (2),
