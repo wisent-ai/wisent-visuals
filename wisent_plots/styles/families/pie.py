@@ -2,15 +2,17 @@
 
 from typing import Any, Dict
 
+from wisent_plots.brand import BRAND_COLORS, FONT_FAMILY
+
 BRAND: Dict[str, Any] = {
     "name": "Pie Chart - Brand Colors",
     "colors": {
-        "background": "#121212",  # Dark background
-        "title": "#C5FFC8",  # Brand accent green
-        "legend_text": "#769978",  # Green-600
+        "background": BRAND_COLORS["surface"],  # Dark background
+        "title": BRAND_COLORS["primary"],  # Brand accent green
+        "legend_text": BRAND_COLORS["muted"],  # Green-600
         "center_text": "#FFFFFF",  # White for center label
         "separator": "#000000",  # Black lines between slices
-        "slice1": "#C5FFC8",  # Brand accent green
+        "slice1": BRAND_COLORS["primary"],  # Brand accent green
         "slice2": "#FA5A46",  # Error red-500
         "slice3": "#FFB366",  # Warning orange-400
         "slice4": "#FFD699",  # Warning orange-300
@@ -18,7 +20,7 @@ BRAND: Dict[str, Any] = {
         "slice6": "#A4C2F4",  # Accent blue-400
     },
     "font": {
-        "family": "Hubot Sans",
+        "family": FONT_FAMILY,
         "size": {"title": 16, "label": 12, "center": 12},
         "weight": {"title": 400, "label": 400, "center": 400},
     },
@@ -31,7 +33,7 @@ BRAND: Dict[str, Any] = {
 BLACK: Dict[str, Any] = {
     "name": "Pie Chart - Black/Grayscale Theme",
     "colors": {
-        "background": "#121212",  # Dark background
+        "background": BRAND_COLORS["surface"],  # Dark background
         "title": "#FFFFFF",  # White title
         "legend_text": "#A9A9A9",  # Gray legend
         "center_text": "#FFFFFF",  # White for center label
@@ -44,7 +46,7 @@ BLACK: Dict[str, Any] = {
         "slice6": "#787878",  # Dark gray
     },
     "font": {
-        "family": "Hubot Sans",
+        "family": FONT_FAMILY,
         "size": {"title": 16, "label": 12, "center": 12},
         "weight": {"title": 400, "label": 400, "center": 400},
     },
@@ -70,7 +72,7 @@ WHITE: Dict[str, Any] = {
         "slice6": "#C8C8C8",  # Light gray
     },
     "font": {
-        "family": "Hubot Sans",
+        "family": FONT_FAMILY,
         "size": {"title": 16, "label": 12, "center": 12},
         "weight": {"title": 400, "label": 400, "center": 400},
     },

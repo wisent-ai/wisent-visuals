@@ -72,6 +72,7 @@ venv.bak/
 
 # Output files
 *.png
+!wisent_plots/assets/wisent-logo.png
 *.jpg
 *.pdf
 !examples/sample_output_*.png

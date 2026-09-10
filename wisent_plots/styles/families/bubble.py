@@ -2,17 +2,19 @@
 
 from typing import Any, Dict
 
+from wisent_plots.brand import BRAND_COLORS, FONT_FAMILY
+
 BRAND: Dict[str, Any] = {
     "name": "Bubble Chart - Brand Colors (Dark Theme)",
     "colors": {
-        "background": "#121212",
-        "text": "#C5FFC8",
-        "grid": "#2D3130",
-        "legend_text": "#769978",
+        "background": BRAND_COLORS["surface"],
+        "text": BRAND_COLORS["primary"],
+        "grid": BRAND_COLORS["grid"],
+        "legend_text": BRAND_COLORS["muted"],
         "bubble1": "#FA5A46",  # Red
         "bubble2": "#FF8C00",  # Orange
         "bubble3": "#FFD700",  # Yellow
-        "bubble4": "#C5FFC8",  # Green
+        "bubble4": BRAND_COLORS["primary"],  # Green
         "bubble5": "#00CED1",  # Cyan
         "bubble6": "#87CEEB",  # Sky blue
         "bubble7": "#B19ECC",  # Purple
@@ -20,7 +22,7 @@ BRAND: Dict[str, Any] = {
         "bubble9": "#A9A9A9",  # Gray
     },
     "font": {
-        "family": "Hubot Sans",
+        "family": FONT_FAMILY,
         "size": {"title": 20, "label": 14, "tick": 12},
         "weight": {"title": 400, "label": 400},
     },
@@ -29,9 +31,9 @@ BRAND: Dict[str, Any] = {
 BLACK: Dict[str, Any] = {
     "name": "Bubble Chart - Black Theme (Grayscale)",
     "colors": {
-        "background": "#121212",
+        "background": BRAND_COLORS["surface"],
         "text": "#FFFFFF",
-        "grid": "#2D3130",
+        "grid": BRAND_COLORS["grid"],
         "legend_text": "#A9A9A9",
         "bubble1": "#FFFFFF",  # White
         "bubble2": "#E0E0E0",  # Light gray
@@ -44,7 +46,7 @@ BLACK: Dict[str, Any] = {
         "bubble9": "#303030",  # Very dark gray
     },
     "font": {
-        "family": "Hubot Sans",
+        "family": FONT_FAMILY,
         "size": {"title": 20, "label": 14, "tick": 12},
         "weight": {"title": 400, "label": 400},
     },
@@ -68,7 +70,7 @@ WHITE: Dict[str, Any] = {
         "bubble9": "#666666",  # Medium gray
     },
     "font": {
-        "family": "Hubot Sans",
+        "family": FONT_FAMILY,
         "size": {"title": 20, "label": 14, "tick": 12},
         "weight": {"title": 400, "label": 400},
     },

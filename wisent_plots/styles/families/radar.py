@@ -2,22 +2,24 @@
 
 from typing import Any, Dict
 
+from wisent_plots.brand import BRAND_COLORS, FONT_FAMILY
+
 BRAND: Dict[str, Any] = {
     "name": "Radar Chart - Brand Colors",
     "colors": {
-        "background": "#121212",  # Dark background
-        "title": "#C5FFC8",  # Brand accent green
-        "legend_text": "#769978",  # Green-600
+        "background": BRAND_COLORS["surface"],  # Dark background
+        "title": BRAND_COLORS["primary"],  # Brand accent green
+        "legend_text": BRAND_COLORS["muted"],  # Green-600
         "axis_text": "#A9A9A9",  # Gray for axis labels
-        "grid": "#2D3130",  # Dark grid lines
+        "grid": BRAND_COLORS["grid"],  # Dark grid lines
         "axis": "#4A4A4A",  # Lighter axis lines
-        "area1": "#90B892",  # Medium green with opacity
-        "area1_stroke": "#5A715B",  # Dark green edge
+        "area1": BRAND_COLORS["tertiary"],  # Medium green with opacity
+        "area1_stroke": BRAND_COLORS["deep"],  # Dark green edge
         "area2": "#FA5A46",  # Error red-500
         "area2_stroke": "#D94435",  # Darker red edge
     },
     "font": {
-        "family": "Hubot Sans",
+        "family": FONT_FAMILY,
         "size": {"title": 16, "label": 12, "axis": 10},
         "weight": {"title": 400, "label": 400, "axis": 400},
     },
@@ -31,11 +33,11 @@ BRAND: Dict[str, Any] = {
 BLACK: Dict[str, Any] = {
     "name": "Radar Chart - Black/Grayscale Theme",
     "colors": {
-        "background": "#121212",  # Dark background
+        "background": BRAND_COLORS["surface"],  # Dark background
         "title": "#FFFFFF",  # White title
         "legend_text": "#A9A9A9",  # Gray legend
         "axis_text": "#A9A9A9",  # Gray for axis labels
-        "grid": "#2D3130",  # Dark grid lines
+        "grid": BRAND_COLORS["grid"],  # Dark grid lines
         "axis": "#4A4A4A",  # Lighter axis lines
         "area1": "#C8C8C8",  # Light gray
         "area1_stroke": "#909090",  # Medium gray edge
@@ -43,7 +45,7 @@ BLACK: Dict[str, Any] = {
         "area2_stroke": "#303030",  # Very dark gray edge
     },
     "font": {
-        "family": "Hubot Sans",
+        "family": FONT_FAMILY,
         "size": {"title": 16, "label": 12, "axis": 10},
         "weight": {"title": 400, "label": 400, "axis": 400},
     },
@@ -69,7 +71,7 @@ WHITE: Dict[str, Any] = {
         "area2_stroke": "#606060",  # Medium gray edge
     },
     "font": {
-        "family": "Hubot Sans",
+        "family": FONT_FAMILY,
         "size": {"title": 16, "label": 12, "axis": 10},
         "weight": {"title": 400, "label": 400, "axis": 400},
     },

@@ -2,19 +2,21 @@
 
 from typing import Any, Dict
 
+from wisent_plots.brand import BRAND_COLORS, FONT_FAMILY
+
 DARK_PALETTE: Dict[str, Any] = {
     "name": "Line Chart - Solid Palette",
     "colors": {
-        "primary": "#C5FFC8",  # Brand accent green
+        "primary": BRAND_COLORS["primary"],  # Brand accent green
         "secondary": "#FA5A46",  # Error red-500
         "accent": "#B19ECC",  # Character purple-500
-        "background": "#121212",  # Dark background
-        "text": "#C5FFC8",  # Brand accent green for title
-        "grid": "#2D3130",  # Grid lines
-        "legend_text": "#769978",  # Legend text
+        "background": BRAND_COLORS["surface"],  # Dark background
+        "text": BRAND_COLORS["primary"],  # Brand accent green for title
+        "grid": BRAND_COLORS["grid"],  # Grid lines
+        "legend_text": BRAND_COLORS["muted"],  # Legend text
     },
     "font": {
-        "family": "Hubot Sans",
+        "family": FONT_FAMILY,
         "size": {
             "title": 20,
             "label": 14,
@@ -48,16 +50,16 @@ DARK_PALETTE: Dict[str, Any] = {
 DARK_MARKERS: Dict[str, Any] = {
     "name": "Line Chart - Solid Color (with markers)",
     "colors": {
-        "primary": "#C5FFC8",  # Brand accent green
+        "primary": BRAND_COLORS["primary"],  # Brand accent green
         "secondary": "#FA5A46",  # Error red-500
         "accent": "#B19ECC",  # Character purple-500
-        "background": "#121212",  # Dark background
-        "text": "#C5FFC8",  # Brand accent green for title
-        "grid": "#2D3130",  # Grid lines
-        "legend_text": "#769978",  # Legend text
+        "background": BRAND_COLORS["surface"],  # Dark background
+        "text": BRAND_COLORS["primary"],  # Brand accent green for title
+        "grid": BRAND_COLORS["grid"],  # Grid lines
+        "legend_text": BRAND_COLORS["muted"],  # Legend text
     },
     "font": {
-        "family": "Hubot Sans",
+        "family": FONT_FAMILY,
         "size": {
             "title": 20,
             "label": 14,
@@ -97,13 +99,13 @@ DARK_SHAPES: Dict[str, Any] = {
         "accent": "#FF8C00",  # Orange
         "quaternary": "#90EE90",  # Light green
         "quinary": "#87CEEB",  # Sky blue
-        "background": "#121212",  # Dark background
-        "text": "#C5FFC8",  # Brand accent green for title
-        "grid": "#2D3130",  # Grid lines
-        "legend_text": "#769978",  # Legend text
+        "background": BRAND_COLORS["surface"],  # Dark background
+        "text": BRAND_COLORS["primary"],  # Brand accent green for title
+        "grid": BRAND_COLORS["grid"],  # Grid lines
+        "legend_text": BRAND_COLORS["muted"],  # Legend text
     },
     "font": {
-        "family": "Hubot Sans",
+        "family": FONT_FAMILY,
         "size": {
             "title": 20,
             "label": 14,
@@ -147,7 +149,7 @@ LIGHT_PALETTE: Dict[str, Any] = {
         "legend_text": "#666666",  # Medium gray legend text
     },
     "font": {
-        "family": "Hubot Sans",
+        "family": FONT_FAMILY,
         "size": {
             "title": 20,
             "label": 14,
@@ -190,7 +192,7 @@ LIGHT_MARKERS: Dict[str, Any] = {
         "legend_text": "#666666",  # Medium gray legend text
     },
     "font": {
-        "family": "Hubot Sans",
+        "family": FONT_FAMILY,
         "size": {
             "title": 20,
             "label": 14,
@@ -236,7 +238,7 @@ LIGHT_SHAPES: Dict[str, Any] = {
         "legend_text": "#666666",  # Medium gray legend text
     },
     "font": {
-        "family": "Hubot Sans",
+        "family": FONT_FAMILY,
         "size": {
             "title": 20,
             "label": 14,

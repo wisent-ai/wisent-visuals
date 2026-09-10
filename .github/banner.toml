@@ -1,0 +1,17 @@
+[automation]
+managed = true
+source_fingerprint = "69d38f66108cdddd"
+category = "visualization"
+copy_status = "missing"
+approved_in = ""
+
+[banner]
+title = "Wisent Visuals"
+description = ""
+product = "Wisent"
+url = "wisent.com"
+theme = "dark"
+layout = "benchmark-left"
+art_seed = "wisent-visuals"
+width = 1584
+height = 396
