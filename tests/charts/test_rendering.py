@@ -27,7 +27,7 @@ class RenderingTests(unittest.TestCase):
         if configured:
             cls.artifacts = Path(configured)
         else:
-            work = Path.home() / ".stado" / "work"
+            work = Path(__file__).resolve().parents[2] / "build" / "chart-tests"
             work.mkdir(parents=True, exist_ok=True)
             cls.temporary = tempfile.TemporaryDirectory(prefix="chart-tests-", dir=work)
             cls.artifacts = Path(cls.temporary.name)
