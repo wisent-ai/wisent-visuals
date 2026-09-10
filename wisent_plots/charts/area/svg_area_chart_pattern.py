@@ -2,8 +2,9 @@
 
 import xml.etree.ElementTree as ET
 from typing import List
-from wisent_plots.charts.area.area_chart_components import render_title_and_legend
-from wisent_plots.charts.area.area_chart_renderer import _generate_stacked_paths
+from wisent_plots.charts.svg_components import render_title_and_legend
+from wisent_plots.charts.svg_assets import _asset_path, _load_pattern_from_file
+from wisent_plots.charts.area.svg.renderer import _generate_stacked_paths
 
 
 class SVGAreaChartPattern:
@@ -88,8 +89,11 @@ class SVGAreaChartPattern:
         self._create_patterns(svg)
 
         # Render title and legend with patterns
-        chart_start_y = self._render_title_and_legend_with_patterns(
-            svg, title, labels
+        chart_start_y = render_title_and_legend(
+            svg, title, labels, self.colors, self.padding_x, self.padding_y,
+            self.title_gap, self.chart_top_margin,
+            fills=[self.colors['area'], 'url(#pattern-middle)', 'url(#pattern-top)'],
+            extra_fill=self.colors['primary'],
         )
 
         # Chart area coordinates
@@ -106,168 +110,19 @@ class SVGAreaChartPattern:
         # Convert to string
         return ET.tostring(svg, encoding='unicode', method='xml')
 
-    def _render_title_and_legend_with_patterns(self, svg, title: str, labels: List[str]) -> int:
-        """Render title and legend with pattern fills matching the chart."""
-        # Title (20px, left-aligned at padding_x, padding_y)
-        title_elem = ET.SubElement(svg, 'text', {
-            'x': str(self.padding_x),
-            'y': str(self.padding_y + 20),
-            'fill': self.colors['title'],
-            'font-size': '20',
-            'font-weight': '400'
-        })
-        title_elem.text = title
-
-        # Legend - horizontal layout below title
-        legend_y = self.padding_y + 20 + self.title_gap + 4
-        legend_x = self.padding_x
-
-        # Pattern/fill mapping for each series (bottom to top in stacking order)
-        fills = [
-            self.colors['area'],  # Bottom band - solid light green
-            'url(#pattern-middle)',  # Middle band - crossing lines pattern
-            'url(#pattern-top)'  # Top band - noise pattern
-        ]
-
-        for i, label in enumerate(labels):
-            # Get fill (pattern or color) for this series
-            fill = fills[i] if i < len(fills) else self.colors['primary']
-
-            # Color box (20x10px with 2px border radius)
-            ET.SubElement(svg, 'rect', {
-                'x': str(legend_x),
-                'y': str(legend_y),
-                'width': '20',
-                'height': '10',
-                'fill': fill,
-                'rx': '2',
-                'ry': '2'
-            })
-
-            # Label text (14px, gap of 8px from box)
-            text = ET.SubElement(svg, 'text', {
-                'x': str(legend_x + 28),
-                'y': str(legend_y + 9),
-                'fill': self.colors['legend_text'],
-                'font-size': '14',
-                'font-weight': '400'
-            })
-            text.text = label
-
-            # Move to next legend item (gap of 20px between items)
-            legend_x += 20 + 8 + len(label) * 8 + 20
-
-        # Return chart start Y position
-        return self.padding_y + 20 + self.title_gap + 24 + self.chart_top_margin
 
     def _create_patterns(self, svg):
-        """Embed SVG pattern from asset file for top band."""
-        import os
-
+        """Embed the two shipped pattern assets in their original order."""
         defs = svg.find('defs')
         if defs is None:
             defs = ET.SubElement(svg, 'defs')
+        _load_pattern_from_file(
+            defs, 'pattern-middle', _asset_path('pattern_crossing_lines.svg')
+        )
+        _load_pattern_from_file(
+            defs, 'pattern-top', _asset_path('large', 'noise_rectangle_large.svg')
+        )
 
-        # Get path to assets directory
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        assets_dir = os.path.join(os.path.dirname(os.path.dirname(current_dir)), 'assets')
-
-        # Pattern for bottom band (lightest) - solid light green
-        # No pattern needed, will use solid color
-
-        # Pattern for middle band - crossing diagonal lines
-        pattern_middle_file = os.path.join(assets_dir, 'pattern_crossing_lines.svg')
-
-        # Parse the checkered pattern SVG file
-        pattern_middle_tree = ET.parse(pattern_middle_file)
-        pattern_middle_root = pattern_middle_tree.getroot()
-
-        # Extract width and height
-        width_middle = pattern_middle_root.get('width')
-        height_middle = pattern_middle_root.get('height')
-        viewBox_middle = pattern_middle_root.get('viewBox')
-
-        if viewBox_middle:
-            viewBox_parts = viewBox_middle.split()
-            if len(viewBox_parts) == 4:
-                width_middle = viewBox_parts[2]
-                height_middle = viewBox_parts[3]
-
-        # Create pattern element for middle band
-        pattern_middle = ET.SubElement(defs, 'pattern', {
-            'id': 'pattern-middle',
-            'patternUnits': 'userSpaceOnUse',
-            'width': width_middle,
-            'height': height_middle
-        })
-
-        # Copy all child elements from the checkered pattern SVG
-        for child in pattern_middle_root:
-            tag = child.tag
-            if tag.startswith('{'):
-                tag = tag.split('}')[1]
-            if tag in ['title', 'desc', 'metadata']:
-                continue
-            self._copy_element(child, pattern_middle)
-
-        # Top band (darkest) - load noise pattern from file
-        pattern_file = os.path.join(assets_dir, 'large', 'noise_rectangle_large.svg')
-
-        # Parse the pattern SVG file
-        pattern_tree = ET.parse(pattern_file)
-        pattern_root = pattern_tree.getroot()
-
-        # Extract width and height from the original SVG
-        width = pattern_root.get('width')
-        height = pattern_root.get('height')
-        viewBox = pattern_root.get('viewBox')
-
-        # If viewBox exists, use those dimensions
-        if viewBox:
-            viewBox_parts = viewBox.split()
-            if len(viewBox_parts) == 4:
-                width = viewBox_parts[2]
-                height = viewBox_parts[3]
-
-        # Create pattern element for top band
-        pattern_elem = ET.SubElement(defs, 'pattern', {
-            'id': 'pattern-top',
-            'patternUnits': 'userSpaceOnUse',
-            'width': width,
-            'height': height
-        })
-
-        # Copy all child elements from the pattern SVG
-        for child in pattern_root:
-            tag = child.tag
-            if tag.startswith('{'):
-                tag = tag.split('}')[1]
-            if tag in ['title', 'desc', 'metadata']:
-                continue
-            self._copy_element(child, pattern_elem)
-
-    def _copy_element(self, source, parent):
-        """Recursively copy an element and its children, removing namespaces."""
-        # Get tag without namespace
-        tag = source.tag
-        if tag.startswith('{'):
-            tag = tag.split('}')[1]
-
-        # Copy attributes without namespace prefixes
-        attribs = {}
-        for key, value in source.attrib.items():
-            if key.startswith('{'):
-                key = key.split('}')[1]
-            attribs[key] = value
-
-        # Create new element
-        new_elem = ET.SubElement(parent, tag, attribs)
-        new_elem.text = source.text
-        new_elem.tail = source.tail
-
-        # Recursively copy children
-        for child in source:
-            self._copy_element(child, new_elem)
 
     def _render_pattern_areas(
         self,

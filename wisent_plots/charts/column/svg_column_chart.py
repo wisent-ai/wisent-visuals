@@ -2,7 +2,8 @@
 
 import xml.etree.ElementTree as ET
 from typing import List
-import os
+from wisent_plots.charts.svg_assets import _create_cartesian_patterns
+from wisent_plots.charts.svg_components import render_title_and_legend
 
 
 class SVGColumnChart:
@@ -121,10 +122,14 @@ class SVGColumnChart:
         })
 
         # Define patterns FIRST (before rendering legend)
-        self._create_patterns(svg)
+        _create_cartesian_patterns(svg, self.style)
 
         # Render title and legend with patterns/colors
-        chart_start_y = self._render_title_and_legend(svg, title, labels)
+        chart_start_y = render_title_and_legend(
+            svg, title, labels, self.colors, self.padding_x, self.padding_y,
+            self.title_gap, self.chart_top_margin, fills=self._get_column_fills(),
+            extra_fill=self.colors['column_one'],
+        )
 
         # Chart area coordinates
         chart_x = self.padding_x
@@ -139,144 +144,6 @@ class SVGColumnChart:
 
         # Convert to string
         return ET.tostring(svg, encoding='unicode', method='xml')
-
-    def _create_patterns(self, svg):
-        """Create SVG pattern definitions based on style."""
-        defs = svg.find('defs')
-        if defs is None:
-            defs = ET.SubElement(svg, 'defs')
-
-        # Get path to assets directory
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        assets_dir = os.path.join(os.path.dirname(os.path.dirname(current_dir)), 'assets')
-
-        # Style 2: noise pattern for middle column
-        if self.style == 2:
-            self._load_pattern_from_file(
-                defs,
-                'pattern-noise',
-                os.path.join(assets_dir, 'large', 'noise_rectangle_large.svg')
-            )
-
-        # Style 3: crossing lines for middle column
-        elif self.style == 3:
-            self._load_pattern_from_file(
-                defs,
-                'pattern-crossing',
-                os.path.join(assets_dir, 'pattern_crossing_lines.svg')
-            )
-
-        # Style 4: noise + dither crosses
-        elif self.style == 4:
-            self._load_pattern_from_file(
-                defs,
-                'pattern-noise',
-                os.path.join(assets_dir, 'large', 'noise_rectangle_large.svg')
-            )
-            self._load_pattern_from_file(
-                defs,
-                'pattern-dither',
-                os.path.join(assets_dir, 'large', 'dither_cross_large.svg')
-            )
-
-    def _load_pattern_from_file(self, defs, pattern_id: str, svg_file: str):
-        """Load and embed an SVG pattern from a file."""
-        pattern_tree = ET.parse(svg_file)
-        pattern_root = pattern_tree.getroot()
-
-        # Extract width and height
-        width = pattern_root.get('width')
-        height = pattern_root.get('height')
-        viewBox = pattern_root.get('viewBox')
-
-        if viewBox:
-            viewBox_parts = viewBox.split()
-            if len(viewBox_parts) == 4:
-                width = viewBox_parts[2]
-                height = viewBox_parts[3]
-
-        # Create pattern element
-        pattern_elem = ET.SubElement(defs, 'pattern', {
-            'id': pattern_id,
-            'patternUnits': 'userSpaceOnUse',
-            'width': width,
-            'height': height
-        })
-
-        # Copy all child elements from the pattern SVG
-        for child in pattern_root:
-            tag = child.tag
-            if tag.startswith('{'):
-                tag = tag.split('}')[1]
-            if tag in ['title', 'desc', 'metadata']:
-                continue
-            self._copy_element(child, pattern_elem)
-
-    def _copy_element(self, source, parent):
-        """Recursively copy an element and its children."""
-        tag = source.tag
-        if tag.startswith('{'):
-            tag = tag.split('}')[1]
-
-        attribs = {}
-        for key, value in source.attrib.items():
-            if key.startswith('{'):
-                key = key.split('}')[1]
-            attribs[key] = value
-
-        new_elem = ET.SubElement(parent, tag, attribs)
-        new_elem.text = source.text
-        new_elem.tail = source.tail
-
-        for child in source:
-            self._copy_element(child, new_elem)
-
-    def _render_title_and_legend(self, svg, title: str, labels: List[str]) -> int:
-        """Render title and legend with appropriate fills."""
-        # Title
-        title_elem = ET.SubElement(svg, 'text', {
-            'x': str(self.padding_x),
-            'y': str(self.padding_y + 20),
-            'fill': self.colors['title'],
-            'font-size': '20',
-            'font-weight': '400'
-        })
-        title_elem.text = title
-
-        # Legend
-        legend_y = self.padding_y + 20 + self.title_gap + 4
-        legend_x = self.padding_x
-
-        # Get fills based on style
-        fills = self._get_column_fills()
-
-        for i, label in enumerate(labels):
-            fill = fills[i] if i < len(fills) else self.colors['column_one']
-
-            # Legend box
-            ET.SubElement(svg, 'rect', {
-                'x': str(legend_x),
-                'y': str(legend_y),
-                'width': '20',
-                'height': '10',
-                'fill': fill,
-                'rx': '2',
-                'ry': '2'
-            })
-
-            # Legend text
-            text = ET.SubElement(svg, 'text', {
-                'x': str(legend_x + 28),
-                'y': str(legend_y + 9),
-                'fill': self.colors['legend_text'],
-                'font-size': '14',
-                'font-weight': '400'
-            })
-            text.text = label
-
-            legend_x += 20 + 8 + len(label) * 8 + 20
-
-        return self.padding_y + 20 + self.title_gap + 24 + self.chart_top_margin
 
     def _get_column_fills(self) -> List[str]:
         """Get fill patterns/colors for each column based on style."""

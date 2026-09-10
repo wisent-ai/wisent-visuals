@@ -4,6 +4,7 @@ from typing import List, Optional
 import xml.etree.ElementTree as ET
 import numpy as np
 import math
+from wisent_plots.charts.svg_components import render_bubble_legend
 
 
 class SVGRadarBubbleChart:
@@ -115,9 +116,9 @@ class SVGRadarBubbleChart:
         if category_labels and categories:
             unique_categories = sorted(set(categories))
             filtered_labels = [category_labels[i] for i in unique_categories if i < len(category_labels)]
-            self._render_legend(svg, filtered_labels, unique_categories)
+            render_bubble_legend(svg, filtered_labels, self.colors, self.padding_x, self.padding_y, unique_categories)
         elif category_labels:
-            self._render_legend(svg, category_labels, None)
+            render_bubble_legend(svg, category_labels, self.colors, self.padding_x, self.padding_y)
 
         # Calculate chart center and radius
         chart_center_x = self.width // 2
@@ -136,48 +137,6 @@ class SVGRadarBubbleChart:
         # Convert to string
         return ET.tostring(svg, encoding='unicode', method='xml')
 
-    def _render_legend(self, svg, labels: List[str], category_indices: Optional[List[int]] = None):
-        """Render horizontal legend below title.
-
-        Args:
-            svg: SVG element to add legend to
-            labels: Labels to display
-            category_indices: Optional list of category indices (for proper color mapping)
-        """
-        legend_y = self.padding_y + 36
-        legend_x = self.padding_x
-
-        for i, label in enumerate(labels):
-            # Color box - use category index if provided, otherwise use label index
-            if category_indices and i < len(category_indices):
-                cat_idx = category_indices[i]
-            else:
-                cat_idx = i
-            color_key = f'bubble{cat_idx+1}'
-            color = self.colors.get(color_key, self.colors['bubble9'])
-
-            ET.SubElement(svg, 'rect', {
-                'x': str(legend_x),
-                'y': str(legend_y),
-                'width': '20',
-                'height': '10',
-                'fill': color,
-                'rx': '2',
-                'ry': '2'
-            })
-
-            # Label text
-            text_elem = ET.SubElement(svg, 'text', {
-                'x': str(legend_x + 28),
-                'y': str(legend_y + 9),
-                'fill': self.colors['legend_text'],
-                'font-size': '12',
-                'font-weight': '400'
-            })
-            text_elem.text = label
-
-            # Move to next position
-            legend_x += 60
 
     def _render_radar_grid(self, svg, cx: float, cy: float, max_r: float, num_rings: int, num_axes: int):
         """Render concentric circles and radial axes."""
