@@ -127,7 +127,7 @@ def test_identity_toml_is_accepted_by_renderer(tmp_path: Path) -> None:
     assert config.art_seed == "brama"
 
 
-def test_every_layout_has_distinct_deterministic_artwork() -> None:
+def test_every_layout_has_distinct_deterministic_artwork(tmp_path: Path) -> None:
     digests = set()
     for layout in SUPPORTED_LAYOUTS:
         config = BannerConfig(
@@ -135,7 +135,9 @@ def test_every_layout_has_distinct_deterministic_artwork() -> None:
             description="Repository description",
             layout=layout,
         )
-        first = Banner(config).render_image().tobytes()
+        image = Banner(config).render_image()
+        image.save(tmp_path / f"{layout}.png")
+        first = image.tobytes()
         second = Banner(config).render_image().tobytes()
         assert first == second
         digests.add(hashlib.sha256(first).hexdigest())
@@ -146,16 +148,16 @@ def test_every_layout_has_distinct_deterministic_artwork() -> None:
 def test_same_layout_uses_repository_seed_for_unique_artwork() -> None:
     grant = Banner(
         BannerConfig(
-            title="Grant CLI",
-            description="Grant research",
+            title="Seed comparison",
+            description="The content stays unchanged.",
             layout="signal-left",
             art_seed="grant-cli",
         )
     ).render_image()
     kronika = Banner(
         BannerConfig(
-            title="Kronika",
-            description="Documentation writer",
+            title="Seed comparison",
+            description="The content stays unchanged.",
             layout="signal-left",
             art_seed="kronika",
         )
