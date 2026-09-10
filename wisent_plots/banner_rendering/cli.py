@@ -4,7 +4,7 @@ import argparse
 from pathlib import Path
 from typing import Optional, Sequence
 
-from .banner import Banner, BannerConfig
+from ..banner import Banner, BannerConfig
 
 
 def build_parser() -> argparse.ArgumentParser:
