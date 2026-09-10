@@ -2,17 +2,18 @@
 
 import json
 import os
-from pathlib import Path
 import re
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.path import Path as PlotPath
 import numpy as np
+from matplotlib.path import Path as PlotPath
 
 from wisent_plots import AreaChart, BarChart, BubbleChart, ColumnChart, LineChart
 from wisent_plots.styles import STYLES, get_style
@@ -51,7 +52,9 @@ class RenderingTests(unittest.TestCase):
             for value in node.attrib.values()
             for match in re.findall(r"url\(#([^)]*)\)", value)
         }
-        self.assertFalse(references - definitions, "SVG paint or clipping references are unresolved")
+        self.assertFalse(
+            references - definitions, "SVG paint or clipping references are unresolved"
+        )
         target = self.artifacts / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(svg, encoding="utf-8")
@@ -63,8 +66,13 @@ class RenderingTests(unittest.TestCase):
             original = ax.plot([1, 2, 3], [-1, -1, -1])[0]
             chart = AreaChart(style=5, edge=True, stacked=True)
             returned = chart.plot_multiple(
-                [1, 2, 3], [[1, 2, 3], [4, 4, 4]], labels=["A", "B"],
-                title="Stacked area", fig=fig, ax=ax, output_format="matplotlib",
+                [1, 2, 3],
+                [[1, 2, 3], [4, 4, 4]],
+                labels=["A", "B"],
+                title="Stacked area",
+                fig=fig,
+                ax=ax,
+                output_format="matplotlib",
             )
             self.assertIs(returned[0], fig)
             self.assertIs(returned[1], ax)
@@ -81,8 +89,10 @@ class RenderingTests(unittest.TestCase):
         with matplotlib.rc_context():
             chart = LineChart(style=2, show_markers=True, line_width=3)
             fig, ax = chart.plot(
-                [1, 2, 3, 4, 5], [1, 2, np.nan, 4, 3],
-                color="#E63946", label="Observed",
+                [1, 2, 3, 4, 5],
+                [1, 2, np.nan, 4, 3],
+                color="#E63946",
+                label="Observed",
             )
             segments = ax.lines[-1].get_path().iter_segments()
             starts = [vertices.tolist() for vertices, code in segments if code == PlotPath.MOVETO]
@@ -108,8 +118,11 @@ class RenderingTests(unittest.TestCase):
         svg = LineChart(style=3).plot_multiple([1, 2, 3], series, labels)
         self.save_svg("line/shapes.svg", svg)
         svg = BubbleChart(chart_type="radar").plot(
-            angles=[0, 90, 180], distances=[0, 50, 100], sizes=[2, 4, 8],
-            categories=[0, 1, 2], category_labels=labels,
+            angles=[0, 90, 180],
+            distances=[0, 50, 100],
+            sizes=[2, 4, 8],
+            categories=[0, 1, 2],
+            category_labels=labels,
         )
         self.save_svg("bubble/radar.svg", svg)
         with self.assertRaisesRegex(ValueError, "Only 'svg' output format is currently supported"):

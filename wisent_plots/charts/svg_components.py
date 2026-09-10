@@ -4,6 +4,21 @@ import xml.etree.ElementTree as ET
 from typing import List, Optional
 
 
+def render_title(svg, title: str, colors: dict, padding_x: int, padding_y: int):
+    title_elem = ET.SubElement(
+        svg,
+        "text",
+        {
+            "x": str(padding_x),
+            "y": str(padding_y + 20),
+            "fill": colors["title"],
+            "font-size": "20",
+            "font-weight": "400",
+        },
+    )
+    title_elem.text = title
+
+
 def render_title_and_legend(
     svg,
     title: str,
@@ -32,14 +47,7 @@ def render_title_and_legend(
         Y coordinate where chart area starts
     """
     # Title (20px, left-aligned at padding_x, padding_y)
-    title_elem = ET.SubElement(svg, 'text', {
-        'x': str(padding_x),
-        'y': str(padding_y + 20),
-        'fill': colors['title'],
-        'font-size': '20',
-        'font-weight': '400'
-    })
-    title_elem.text = title
+    render_title(svg, title, colors, padding_x, padding_y)
 
     # Legend - horizontal layout below title
     legend_y = padding_y + 20 + title_gap + 4
@@ -47,11 +55,11 @@ def render_title_and_legend(
 
     # Get color palette (extend if needed)
     if fills is None:
-        color_palette = [colors['primary'], colors['secondary'], colors['accent']]
-        if 'quaternary' in colors:
-            color_palette.append(colors['quaternary'])
-        if 'quinary' in colors:
-            color_palette.append(colors['quinary'])
+        color_palette = [colors["primary"], colors["secondary"], colors["accent"]]
+        if "quaternary" in colors:
+            color_palette.append(colors["quaternary"])
+        if "quinary" in colors:
+            color_palette.append(colors["quinary"])
     else:
         color_palette = fills
 
@@ -62,24 +70,32 @@ def render_title_and_legend(
             color = color_palette[i % len(color_palette)]
         else:
             color = color_palette[i] if i < len(color_palette) else extra_fill
-        ET.SubElement(svg, 'rect', {
-            'x': str(legend_x),
-            'y': str(legend_y),
-            'width': '20',
-            'height': '10',
-            'fill': color,
-            'rx': '2',
-            'ry': '2'
-        })
+        ET.SubElement(
+            svg,
+            "rect",
+            {
+                "x": str(legend_x),
+                "y": str(legend_y),
+                "width": "20",
+                "height": "10",
+                "fill": color,
+                "rx": "2",
+                "ry": "2",
+            },
+        )
 
         # Label text (14px, gap of 8px from box)
-        text = ET.SubElement(svg, 'text', {
-            'x': str(legend_x + 28),
-            'y': str(legend_y + 9),
-            'fill': colors['legend_text'],
-            'font-size': '14',
-            'font-weight': '400'
-        })
+        text = ET.SubElement(
+            svg,
+            "text",
+            {
+                "x": str(legend_x + 28),
+                "y": str(legend_y + 9),
+                "fill": colors["legend_text"],
+                "font-size": "14",
+                "font-weight": "400",
+            },
+        )
         text.text = label
 
         # Move to next legend item (gap of 20px between items)
@@ -90,40 +106,85 @@ def render_title_and_legend(
 
 
 def render_bubble_legend(
-    svg, labels: List[str], colors: dict, padding_x: int, padding_y: int,
+    svg,
+    labels: List[str],
+    colors: dict,
+    padding_x: int,
+    padding_y: int,
     category_indices: Optional[List[int]] = None,
 ):
-        legend_y = padding_y + 36
-        legend_x = padding_x
+    legend_y = padding_y + 36
+    legend_x = padding_x
 
-        for i, label in enumerate(labels):
-            # Color box - use category index if provided, otherwise use label index
-            if category_indices and i < len(category_indices):
-                cat_idx = category_indices[i]
-            else:
-                cat_idx = i
-            color_key = f'bubble{cat_idx+1}'
-            color = colors.get(color_key, colors['bubble9'])
+    for i, label in enumerate(labels):
+        # Color box - use category index if provided, otherwise use label index
+        if category_indices and i < len(category_indices):
+            cat_idx = category_indices[i]
+        else:
+            cat_idx = i
+        color_key = f"bubble{cat_idx+1}"
+        color = colors.get(color_key, colors["bubble9"])
 
-            ET.SubElement(svg, 'rect', {
-                'x': str(legend_x),
-                'y': str(legend_y),
-                'width': '20',
-                'height': '10',
-                'fill': color,
-                'rx': '2',
-                'ry': '2'
-            })
+        ET.SubElement(
+            svg,
+            "rect",
+            {
+                "x": str(legend_x),
+                "y": str(legend_y),
+                "width": "20",
+                "height": "10",
+                "fill": color,
+                "rx": "2",
+                "ry": "2",
+            },
+        )
 
-            # Label text
-            text_elem = ET.SubElement(svg, 'text', {
-                'x': str(legend_x + 28),
-                'y': str(legend_y + 9),
-                'fill': colors['legend_text'],
-                'font-size': '12',
-                'font-weight': '400'
-            })
-            text_elem.text = label
+        # Label text
+        text_elem = ET.SubElement(
+            svg,
+            "text",
+            {
+                "x": str(legend_x + 28),
+                "y": str(legend_y + 9),
+                "fill": colors["legend_text"],
+                "font-size": "12",
+                "font-weight": "400",
+            },
+        )
+        text_elem.text = label
 
-            # Move to next position
-            legend_x += 60
+        # Move to next position
+        legend_x += 60
+
+
+def render_marker(svg, x: float, y: float, shape: str, color: str, size: float = 11):
+    """Draw a marker at the specified position."""
+    half_size = size / 2
+
+    if shape == "circle":
+        ET.SubElement(
+            svg, "circle", {"cx": str(x), "cy": str(y), "r": str(half_size), "fill": color}
+        )
+    elif shape == "square":
+        ET.SubElement(
+            svg,
+            "rect",
+            {
+                "x": str(x - half_size),
+                "y": str(y - half_size),
+                "width": str(size),
+                "height": str(size),
+                "fill": color,
+                "rx": "2",
+                "ry": "2",
+            },
+        )
+    elif shape == "diamond":
+        # Rotate square by 45 degrees
+        points = f"{x},{y - half_size} {x + half_size},{y} {x},{y + half_size} {x - half_size},{y}"
+        ET.SubElement(svg, "polygon", {"points": points, "fill": color})
+    elif shape == "triangle":
+        # Equilateral triangle pointing up
+        h = half_size * 1.732  # sqrt(3) for equilateral
+        points = f"{x},{y - h * 0.67} {x + half_size},{y + h * 0.33} {x - half_size},{y + h * 0.33}"
+        ET.SubElement(svg, "polygon", {"points": points, "fill": color})

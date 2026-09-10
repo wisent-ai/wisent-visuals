@@ -13,14 +13,14 @@ Create beautiful, brand-styled plots with ease. This package provides ready-to-u
 ## Installation
 
 ```bash
-pip install wisent-plots
+pip install wisent-visuals
 ```
 
 For development:
 
 ```bash
-git clone https://github.com/wisent/wisent-plots
-cd wisent-plots
+git clone https://github.com/wisent-ai/wisent-visuals
+cd wisent-visuals
 pip install -e ".[dev]"
 ```
 
@@ -52,35 +52,25 @@ chart.save(fig, "my_chart.png")
 
 ## Available Styles
 
-The package includes 5 distinct styles, each with unique color palettes and typography:
-
-1. **Corporate** (style=1): Professional deep blue theme
-2. **Minimal** (style=2): Clean, understated design
-3. **Bold** (style=3): High-contrast, vibrant colors
-4. **Academic** (style=4): Classic, publication-ready style
-5. **Modern** (style=5): Contemporary gradient colors
+Area charts provide five SVG styles: solid green bands (1), gradients (2),
+patterns (3), two-pattern fills (4), and a solid multicolor palette (5).
+Use `edge=True` for SVG area styles 1–4; style 5 also renders SVG without an edge.
+`plot_multiple(..., output_format="matplotlib")` selects Matplotlib explicitly.
 
 ### Customizing Styles with Figma
 
 To match your exact Figma design specifications:
 
-1. Open `wisent_plots/styles/style_config.py`
-2. Update the color values, fonts, and spacing for each style
-3. The comments marked with `# UPDATE with Figma` show where to add your brand colors
+1. Open the chart family's module under `wisent_plots/styles/families/`.
+2. Update that family's colors, fonts, and spacing.
+3. Keep public style identifiers in `wisent_plots/styles/style_config.py`.
 
-Example of what to update:
+The public `STYLES` mapping and `get_style()` keep their existing imports,
+identifiers, and mutable configuration objects. The registry covers area, line,
+bubble, pie, and radar presets; SVG bar and column palettes remain with those renderers.
 
-```python
-"colors": {
-    "primary": "#1E3A8A",  # UPDATE: Replace with your primary brand color
-    "secondary": "#3B82F6",  # UPDATE: Replace with your secondary color
-    # ... etc
-},
-"font": {
-    "family": "Arial",  # UPDATE: Replace with your brand font
-    # ...
-}
-```
+Matplotlib drawing lives beside its chart facade in `matplotlib_backend`;
+SVG title, legend, marker and pattern helpers are shared under `charts/`.
 
 ## Usage Examples
 
@@ -120,7 +110,8 @@ fig, ax = chart.plot_multiple(
     labels=["Product A", "Product B", "Product C"],
     title="Product Comparison",
     xlabel="Time (weeks)",
-    ylabel="Units Sold"
+    ylabel="Units Sold",
+    output_format="matplotlib",
 )
 chart.save(fig, "comparison.png")
 ```
@@ -185,7 +176,7 @@ Create a single-series area chart.
 
 **Returns:** `(fig, ax)` tuple
 
-#### `plot_multiple(x, y_series, labels=None, colors=None, title=None, xlabel=None, ylabel=None, fig=None, ax=None)`
+#### `plot_multiple(x, y_series, labels=None, colors=None, title=None, xlabel=None, ylabel=None, fig=None, ax=None, output_format="svg")`
 
 Create a multi-series area chart.
 
@@ -200,7 +191,9 @@ Create a multi-series area chart.
 - `fig`: Existing matplotlib Figure (optional)
 - `ax`: Existing matplotlib Axes (optional)
 
-**Returns:** `(fig, ax)` tuple
+**Returns:** an SVG string for styles 1–4 with `edge=True` and for style 5 when
+`output_format="svg"`; otherwise `(fig, ax)`. Use `output_format="matplotlib"`
+when supplying existing Matplotlib axes.
 
 #### `save(fig, filename, dpi=None, transparent=False)`
 
@@ -217,16 +210,20 @@ Save the figure to a file.
 ### Running Examples
 
 ```bash
-cd examples
-python quick_start.py
-python area_chart_demo.py
+python examples/area/test_area_charts_all_themes.py
+python examples/bubble/test_bubble_charts_all_themes.py
 ```
 
 ### Running Tests
 
 ```bash
-pytest tests/
+python -m unittest discover -s tests/charts -p rendering.py -v
 ```
+
+These tests render through the real SVG and Matplotlib backends without opening
+a window. They check stacked geometry, missing-observation gaps, SVG paint and
+clipping references, and unsupported output refusal. Set
+`WISENT_VISUALS_ARTIFACT_DIR` to retain SVG, PNG and style-configuration evidence.
 
 ### Code Formatting
 
@@ -253,7 +250,7 @@ This creates distribution files in the `dist/` directory.
 python -m twine upload --repository testpypi dist/*
 
 # Install from TestPyPI to test
-pip install --index-url https://test.pypi.org/simple/ wisent-plots
+pip install --index-url https://test.pypi.org/simple/ wisent-visuals
 ```
 
 ### Publish to PyPI

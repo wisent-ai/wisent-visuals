@@ -1,14 +1,16 @@
 """Line chart implementation with Wisent brand styling."""
 
-from typing import Optional, Union, List, Tuple
-import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
-from matplotlib.axes import Axes
-import numpy as np
+from typing import List, Optional, Tuple, Union
 
-from wisent_plots.styles.style_config import get_style
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
+
 from wisent_plots.charts.line.svg_line_chart import SVGLineChart
-from .matplotlib_backend import _plot_single, _plot_multiple
+from wisent_plots.styles.style_config import get_style
+
+from .matplotlib_backend import _plot_multiple, _plot_single
 
 
 class LineChart:
@@ -32,7 +34,7 @@ class LineChart:
         figsize: Tuple[float, float] = (10, 6),
         dpi: int = 100,
         line_width: float = 2.0,
-        show_markers: bool = False
+        show_markers: bool = False,
     ):
         """Initialize a LineChart with specified styling.
 
@@ -65,7 +67,9 @@ class LineChart:
             if style_lower in style_map:
                 self.style_number = style_map[style_lower]
             else:
-                raise ValueError(f"Unknown style name: {style}. Valid names are: {', '.join(style_map.keys())}")
+                raise ValueError(
+                    f"Unknown style name: {style}. Valid names are: {', '.join(style_map.keys())}"
+                )
         else:
             self.style_number = style
 
@@ -146,7 +150,7 @@ class LineChart:
         ylabel: Optional[str] = None,
         fig: Optional[Figure] = None,
         ax: Optional[Axes] = None,
-        output_format: str = 'svg',
+        output_format: str = "svg",
     ) -> Union[Tuple[Figure, Axes], str]:
         """Create a line chart with multiple data series.
 
@@ -166,23 +170,23 @@ class LineChart:
             Tuple of (figure, axes) objects or SVG string depending on output_format.
         """
         # Use SVG implementation for all line chart styles
-        if output_format == 'svg':
+        if output_format == "svg":
             svg_chart = SVGLineChart()
 
             # Update colors - include all colors from style config
-            svg_chart.colors['background'] = self.style_config['colors']['background']
-            svg_chart.colors['title'] = self.style_config['colors']['text']
-            svg_chart.colors['legend_text'] = self.style_config['colors']['legend_text']
-            svg_chart.colors['grid_vertical'] = self.style_config['colors']['grid']
-            svg_chart.colors['grid_horizontal'] = self.style_config['colors']['grid']
-            svg_chart.colors['primary'] = self.style_config['colors']['primary']
-            svg_chart.colors['secondary'] = self.style_config['colors']['secondary']
-            svg_chart.colors['accent'] = self.style_config['colors']['accent']
+            svg_chart.colors["background"] = self.style_config["colors"]["background"]
+            svg_chart.colors["title"] = self.style_config["colors"]["text"]
+            svg_chart.colors["legend_text"] = self.style_config["colors"]["legend_text"]
+            svg_chart.colors["grid_vertical"] = self.style_config["colors"]["grid"]
+            svg_chart.colors["grid_horizontal"] = self.style_config["colors"]["grid"]
+            svg_chart.colors["primary"] = self.style_config["colors"]["primary"]
+            svg_chart.colors["secondary"] = self.style_config["colors"]["secondary"]
+            svg_chart.colors["accent"] = self.style_config["colors"]["accent"]
             # Add additional colors if available
-            if 'quaternary' in self.style_config['colors']:
-                svg_chart.colors['quaternary'] = self.style_config['colors']['quaternary']
-            if 'quinary' in self.style_config['colors']:
-                svg_chart.colors['quinary'] = self.style_config['colors']['quinary']
+            if "quaternary" in self.style_config["colors"]:
+                svg_chart.colors["quaternary"] = self.style_config["colors"]["quaternary"]
+            if "quinary" in self.style_config["colors"]:
+                svg_chart.colors["quinary"] = self.style_config["colors"]["quinary"]
 
             # Determine marker shapes based on style
             marker_shapes = None
@@ -191,17 +195,20 @@ class LineChart:
             if self.style_number in [2, 5]:
                 # Style 2 & 5: Same shape markers (dark & white themes)
                 show_markers = True
-                marker_shapes = ['circle', 'circle', 'circle']
+                marker_shapes = ["circle", "circle", "circle"]
             elif self.style_number in [3, 6]:
                 # Style 3 & 6: Different shapes for each line (dark & white themes)
                 show_markers = True
-                marker_shapes = ['circle', 'triangle', 'square', 'diamond', 'triangle']
+                marker_shapes = ["circle", "triangle", "square", "diamond", "triangle"]
 
             svg_string = svg_chart.create_chart(
-                x, y_series, labels or [], title or "Line Chart",
+                x,
+                y_series,
+                labels or [],
+                title or "Line Chart",
                 line_width=self.line_width,
                 show_markers=show_markers,
-                marker_shapes=marker_shapes
+                marker_shapes=marker_shapes,
             )
             return svg_string
 

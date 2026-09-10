@@ -3,7 +3,8 @@
 This module contains style presets based on Wisent's Figma design system.
 """
 
-from typing import Dict, Any
+from typing import Any, Dict
+
 from .families import area, bubble, line, pie, radar
 
 # Style definitions based on Figma Visual Identity

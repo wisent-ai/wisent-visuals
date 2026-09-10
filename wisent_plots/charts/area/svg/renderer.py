@@ -1,8 +1,9 @@
 """Main area chart rendering with paths and grid lines."""
 
-import numpy as np
 import xml.etree.ElementTree as ET
 from typing import List, Tuple
+
+import numpy as np
 
 
 def render_area_chart(
@@ -14,7 +15,7 @@ def render_area_chart(
     chart_width: int,
     chart_height: int,
     colors: dict,
-    style_config: dict = None
+    style_config: dict = None,
 ):
     """Render the main area chart with grid lines and x-axis labels.
 
@@ -31,20 +32,22 @@ def render_area_chart(
     """
     # Create clipping path for chart area
     clip_id = "chart-clip"
-    defs = ET.SubElement(svg, 'defs')
-    clipPath = ET.SubElement(defs, 'clipPath', {'id': clip_id})
-    ET.SubElement(clipPath, 'rect', {
-        'x': str(chart_x),
-        'y': str(chart_start_y),
-        'width': str(chart_width),
-        'height': str(chart_height - 40)
-    })
+    defs = ET.SubElement(svg, "defs")
+    clipPath = ET.SubElement(defs, "clipPath", {"id": clip_id})
+    ET.SubElement(
+        clipPath,
+        "rect",
+        {
+            "x": str(chart_x),
+            "y": str(chart_start_y),
+            "width": str(chart_width),
+            "height": str(chart_height - 40),
+        },
+    )
 
     # Generate stacked area paths
     paths = _generate_stacked_paths(
-        x_data, y_series,
-        chart_x, chart_start_y,
-        chart_width, chart_height - 40
+        x_data, y_series, chart_x, chart_start_y, chart_width, chart_height - 40
     )
 
     # Draw grid lines FIRST so area bands appear in front
@@ -53,88 +56,120 @@ def render_area_chart(
         x = chart_x + (i * grid_spacing)
         if x <= chart_x + chart_width:
             # Dashed vertical line
-            ET.SubElement(svg, 'line', {
-                'x1': str(x),
-                'y1': str(chart_start_y),
-                'x2': str(x),
-                'y2': str(chart_start_y + chart_height - 40),
-                'stroke': colors['grid'],
-                'stroke-width': '1',
-                'stroke-dasharray': '4,4'
-            })
+            ET.SubElement(
+                svg,
+                "line",
+                {
+                    "x1": str(x),
+                    "y1": str(chart_start_y),
+                    "x2": str(x),
+                    "y2": str(chart_start_y + chart_height - 40),
+                    "stroke": colors["grid"],
+                    "stroke-width": "1",
+                    "stroke-dasharray": "4,4",
+                },
+            )
 
             # X-axis label below chart
             if i < 14:
                 label_text = f"{i+1:02d}"
-                label_elem = ET.SubElement(svg, 'text', {
-                    'x': str(x + 10),
-                    'y': str(chart_start_y + chart_height - 10),
-                    'fill': colors['legend_text'],
-                    'font-size': '14',
-                    'font-weight': '400',
-                    'text-anchor': 'middle'
-                })
+                label_elem = ET.SubElement(
+                    svg,
+                    "text",
+                    {
+                        "x": str(x + 10),
+                        "y": str(chart_start_y + chart_height - 10),
+                        "fill": colors["legend_text"],
+                        "font-size": "14",
+                        "font-weight": "400",
+                        "text-anchor": "middle",
+                    },
+                )
                 label_elem.text = label_text
 
     # Draw area bands AFTER grid lines so they appear in front
     # Check if we're using solid colors (style 5) or opacity-based colors
-    use_solid_colors = style_config and style_config.get('fill', {}).get('type') == 'solid'
+    use_solid_colors = style_config and style_config.get("fill", {}).get("type") == "solid"
 
     if use_solid_colors:
         # Style 5: Use distinct solid colors for each band
         # Bottom (largest) - primary color (green)
-        ET.SubElement(svg, 'path', {
-            'd': paths[0][0],
-            'fill': colors['primary'],  # #C5FFC8
-            'fill-rule': 'evenodd',
-            'clip-path': f'url(#{clip_id})'
-        })
+        ET.SubElement(
+            svg,
+            "path",
+            {
+                "d": paths[0][0],
+                "fill": colors["primary"],  # #C5FFC8
+                "fill-rule": "evenodd",
+                "clip-path": f"url(#{clip_id})",
+            },
+        )
 
         # Middle band - secondary color (red)
-        ET.SubElement(svg, 'path', {
-            'd': paths[1][0],
-            'fill': colors['secondary'],  # #FA5A46
-            'fill-rule': 'evenodd',
-            'clip-path': f'url(#{clip_id})'
-        })
+        ET.SubElement(
+            svg,
+            "path",
+            {
+                "d": paths[1][0],
+                "fill": colors["secondary"],  # #FA5A46
+                "fill-rule": "evenodd",
+                "clip-path": f"url(#{clip_id})",
+            },
+        )
 
         # Top band (smallest) - accent color (purple)
-        ET.SubElement(svg, 'path', {
-            'd': paths[2][0],
-            'fill': colors['accent'],  # #B19ECC
-            'fill-rule': 'evenodd',
-            'clip-path': f'url(#{clip_id})'
-        })
+        ET.SubElement(
+            svg,
+            "path",
+            {
+                "d": paths[2][0],
+                "fill": colors["accent"],  # #B19ECC
+                "fill-rule": "evenodd",
+                "clip-path": f"url(#{clip_id})",
+            },
+        )
     else:
         # Original opacity-based rendering
         # Bottom should be lightest, top should be darkest
         # Assign opacities to match: bottom=1.0 (lightest), top=0.4 (darkest)
 
         # Top band (smallest) - opacity 0.4 (darkest)
-        ET.SubElement(svg, 'path', {
-            'd': paths[2][0],
-            'fill': colors['area'],  # #C5FFC8
-            'opacity': '0.4',
-            'fill-rule': 'evenodd',
-            'clip-path': f'url(#{clip_id})'
-        })
+        ET.SubElement(
+            svg,
+            "path",
+            {
+                "d": paths[2][0],
+                "fill": colors["area"],  # #C5FFC8
+                "opacity": "0.4",
+                "fill-rule": "evenodd",
+                "clip-path": f"url(#{clip_id})",
+            },
+        )
 
         # Middle band - opacity 0.5
-        ET.SubElement(svg, 'path', {
-            'd': paths[1][0],
-            'fill': colors['area'],  # #C5FFC8
-            'opacity': '0.5',
-            'fill-rule': 'evenodd',
-            'clip-path': f'url(#{clip_id})'
-        })
+        ET.SubElement(
+            svg,
+            "path",
+            {
+                "d": paths[1][0],
+                "fill": colors["area"],  # #C5FFC8
+                "opacity": "0.5",
+                "fill-rule": "evenodd",
+                "clip-path": f"url(#{clip_id})",
+            },
+        )
 
         # Bottom band (largest) - opacity 1.0 (lightest, fully opaque)
-        ET.SubElement(svg, 'path', {
-            'd': paths[0][0],
-            'fill': colors['area'],  # #C5FFC8
-            'fill-rule': 'evenodd',
-            'clip-path': f'url(#{clip_id})'
-        })
+        ET.SubElement(
+            svg,
+            "path",
+            {
+                "d": paths[0][0],
+                "fill": colors["area"],  # #C5FFC8
+                "fill-rule": "evenodd",
+                "clip-path": f"url(#{clip_id})",
+            },
+        )
 
 
 def _generate_stacked_paths(
