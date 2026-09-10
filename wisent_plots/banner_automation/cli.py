@@ -38,7 +38,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         args.command in {"sync", "clear-unapproved-descriptions", "sync-approved-descriptions"}
         and not token
     ):
-        print(f"{args.token_env} must contain a GitHub App token for mutation", file=sys.stderr)
+        print(f"{args.token_env} must contain a GitHub token for mutation", file=sys.stderr)
         return 2
     if args.command == "clear-unapproved-descriptions":
         source = Path(__file__).parent.parent.joinpath("unapproved_descriptions.json")

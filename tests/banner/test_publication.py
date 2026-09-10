@@ -54,7 +54,7 @@ def test_sync_refuses_missing_credentials_before_publication(tmp_path):
     (tmp_path / "refusal.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
     assert result.returncode == 2
     assert result.stderr.strip() == (
-        "WISENT_BANNER_TEST_MISSING_TOKEN must contain a GitHub App token for mutation"
+        "WISENT_BANNER_TEST_MISSING_TOKEN must contain a GitHub token for mutation"
     )
     assert result.stdout == ""
 
