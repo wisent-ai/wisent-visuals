@@ -8,6 +8,7 @@ import numpy as np
 
 from wisent_plots.styles.style_config import get_style
 from wisent_plots.charts.line.svg_line_chart import SVGLineChart
+from .matplotlib_backend import _plot_single, _plot_multiple
 
 
 class LineChart:
@@ -132,74 +133,7 @@ class LineChart:
         Returns:
             Tuple of (figure, axes) objects.
         """
-        # Convert to numpy arrays
-        x = np.asarray(x)
-        y = np.asarray(y)
-
-        # Create figure and axes if not provided
-        if fig is None or ax is None:
-            fig, ax = plt.subplots(figsize=self.figsize, dpi=self.dpi)
-
-        # Apply style configuration
-        self._apply_style(fig, ax)
-
-        # Determine color
-        line_color = color if color else self.style_config["colors"]["primary"]
-
-        # Plot line
-        line = ax.plot(
-            x,
-            y,
-            color=line_color,
-            linewidth=self.line_width,
-            label=label,
-            marker='o' if self.show_markers else None,
-            markersize=5 if self.show_markers else 0,
-        )
-
-        # Set labels and title
-        if title:
-            ax.set_title(
-                title,
-                fontsize=self.style_config["font"]["size"]["title"],
-                fontweight=self.style_config["font"]["weight"]["title"],
-                pad=10,
-                color=self.style_config["colors"]["text"],
-                loc='left',
-            )
-
-        if xlabel:
-            ax.set_xlabel(
-                xlabel,
-                fontsize=self.style_config["font"]["size"]["label"],
-                fontweight=self.style_config["font"]["weight"]["label"],
-                labelpad=10,
-                color=self.style_config["colors"]["text"],
-            )
-
-        if ylabel:
-            ax.set_ylabel(
-                ylabel,
-                fontsize=self.style_config["font"]["size"]["label"],
-                fontweight=self.style_config["font"]["weight"]["label"],
-                labelpad=10,
-                color=self.style_config["colors"]["text"],
-            )
-
-        # Add legend if label provided
-        if label:
-            legend = ax.legend(
-                fontsize=self.style_config["font"]["size"]["tick"],
-                frameon=False,
-            )
-            legend_color = self.style_config["colors"].get("legend_text", self.style_config["colors"]["text"])
-            for text in legend.get_texts():
-                text.set_color(legend_color)
-
-        # Tight layout
-        fig.tight_layout()
-
-        return fig, ax
+        return _plot_single(self, x, y, title, xlabel, ylabel, color, label, fig, ax)
 
     def plot_multiple(
         self,
@@ -271,118 +205,7 @@ class LineChart:
             )
             return svg_string
 
-        # Matplotlib fallback
-        if fig is None or ax is None:
-            fig, ax = plt.subplots(figsize=self.figsize, dpi=self.dpi)
-
-        # Apply style configuration
-        self._apply_style(fig, ax)
-
-        # Convert x to numpy array
-        x = np.asarray(x)
-
-        # Determine colors
-        if colors is None:
-            colors = [
-                self.style_config["colors"]["primary"],
-                self.style_config["colors"]["secondary"],
-                self.style_config["colors"]["accent"],
-            ]
-            # Extend colors if needed
-            while len(colors) < len(y_series):
-                colors.extend(colors)
-
-        # Convert all y_series to numpy arrays and plot
-        for i, y in enumerate(y_series):
-            y_array = np.asarray(y)
-            line_color = colors[i % len(colors)]
-            label = labels[i] if labels and i < len(labels) else None
-
-            ax.plot(
-                x,
-                y_array,
-                color=line_color,
-                linewidth=self.line_width,
-                label=label,
-                marker='o' if self.show_markers else None,
-                markersize=5 if self.show_markers else 0,
-            )
-
-        # Set labels and title
-        if title:
-            ax.set_title(
-                title,
-                fontsize=self.style_config["font"]["size"]["title"],
-                fontweight=self.style_config["font"]["weight"]["title"],
-                pad=10,
-                color=self.style_config["colors"]["text"],
-                loc='left',
-            )
-
-        if xlabel:
-            ax.set_xlabel(
-                xlabel,
-                fontsize=self.style_config["font"]["size"]["label"],
-                fontweight=self.style_config["font"]["weight"]["label"],
-                labelpad=10,
-                color=self.style_config["colors"]["text"],
-            )
-
-        if ylabel:
-            ax.set_ylabel(
-                ylabel,
-                fontsize=self.style_config["font"]["size"]["label"],
-                fontweight=self.style_config["font"]["weight"]["label"],
-                labelpad=10,
-                color=self.style_config["colors"]["text"],
-            )
-
-        # Add legend if labels provided
-        if labels:
-            legend = ax.legend(
-                fontsize=self.style_config["font"]["size"]["tick"],
-                frameon=False,
-            )
-            legend_color = self.style_config["colors"].get("legend_text", self.style_config["colors"]["text"])
-            for text in legend.get_texts():
-                text.set_color(legend_color)
-
-        # Tight layout
-        fig.tight_layout()
-
-        return fig, ax
-
-    def _apply_style(self, fig: Figure, ax: Axes) -> None:
-        """Apply style configuration to figure and axes."""
-        # Set background colors
-        fig.patch.set_facecolor(self.style_config["colors"]["background"])
-        ax.set_facecolor(self.style_config["colors"]["background"])
-
-        # Configure grid
-        ax.grid(
-            True,
-            alpha=0.3,
-            linestyle='-',
-            linewidth=1.0,
-            color=self.style_config["colors"]["grid"],
-            zorder=0,
-        )
-
-        # Configure spines
-        for spine in ax.spines.values():
-            spine.set_visible(False)
-
-        # Configure tick parameters
-        ax.tick_params(
-            axis="both",
-            labelsize=self.style_config["font"]["size"]["tick"],
-            colors=self.style_config["colors"]["legend_text"],
-            length=0,
-            pad=10,
-        )
-
-        # Set font family
-        plt.rcParams["font.family"] = self.style_config["font"]["family"]
+        return _plot_multiple(self, x, y_series, labels, colors, title, xlabel, ylabel, fig, ax)
 
     def save(
         self,
