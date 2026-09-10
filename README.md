@@ -103,7 +103,7 @@ configuration and generated assets; CI can rerun this command and use
 
 `wisent-banner-bot` never writes product copy from repository metadata. Approved
 titles and optional descriptions live in
-`wisent_plots/approved_copy.json`, with the conversation session and timestamp
+`wisent_plots/identity/approved_copy.json`, with the conversation session and timestamp
 that authorized each entry.
 
 Repository descriptions, topics, languages, and README text select artwork only:
@@ -121,7 +121,7 @@ description. The generated TOML records `copy_status` and `approved_in`; changin
 the approval register changes the source fingerprint and regenerates the assets.
 
 Descriptions previously introduced by the removed copy table are listed in
-`wisent_plots/unapproved_descriptions.json`. Clear only those audited values
+`wisent_plots/identity/unapproved_descriptions.json`. Clear only those audited values
 with:
 
 ```bash

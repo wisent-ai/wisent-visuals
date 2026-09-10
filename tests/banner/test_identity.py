@@ -7,7 +7,7 @@ from pathlib import Path
 
 import wisent_plots
 from wisent_plots.banner import SUPPORTED_LAYOUTS, Banner, BannerConfig
-from wisent_plots.repository_profile import RepositoryProfile, generate_identity
+from wisent_plots.identity import RepositoryProfile, generate_identity
 
 
 def render_profile(profile, tmp_path):
@@ -56,7 +56,7 @@ def test_unapproved_metadata_does_not_become_published_copy(tmp_path):
 
 
 def test_approved_copy_survives_different_repository_metadata(tmp_path):
-    source = Path(wisent_plots.__file__).with_name("approved_copy.json")
+    source = Path(wisent_plots.__file__).with_name("identity") / "approved_copy.json"
     approved = json.loads(source.read_text(encoding="utf-8"))["entries"]["brama"]
     metadata = "This unapproved audio claim must not replace the approved title"
     text = render_profile(RepositoryProfile("brama", metadata, ("audio",)), tmp_path)

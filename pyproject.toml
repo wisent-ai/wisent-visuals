@@ -60,8 +60,8 @@ include = ["wisent_plots*", "wisent_release*"]
 [tool.setuptools.package-data]
 wisent_plots = [
     "assets/*.svg",
-    "approved_copy.json",
-    "unapproved_descriptions.json",
+    "identity/approved_copy.json",
+    "identity/unapproved_descriptions.json",
     "assets/*.png",
     "assets/large/*.svg",
     "assets/fonts/*.ttf",

@@ -4,7 +4,7 @@ import io
 from typing import Iterable, Optional, Set, Tuple
 
 from ..banner import Banner
-from ..repository_profile import RepositoryProfile, generate_identity
+from ..identity import RepositoryProfile, generate_identity
 from .github import GitHubClient
 from .model import BANNER_PATH, CONFIG_PATH, LEGACY_BANNER_PATH, SVG_PATH, RepositoryPlan
 from .readme import _has_manual_banner, _opening_legacy_banner, _readme_excerpt, update_readme

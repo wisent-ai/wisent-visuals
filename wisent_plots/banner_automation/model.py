@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from ..repository_profile import BannerIdentity
+from ..identity import BannerIdentity
 
 BANNER_START = "<!-- wisent-banner:start -->"
 BANNER_END = "<!-- wisent-banner:end -->"

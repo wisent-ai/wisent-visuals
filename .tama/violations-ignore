@@ -1,0 +1,17 @@
+# Audit exclusions for `tama find-violations`. Only generated output belongs
+# here: each entry is written by a command in this repository and replaced
+# wholesale on the next run, so splitting it into modules would be undone.
+#
+# Rendered by `wisent-banner --config .github/banner.toml`:
+assets/readme-banner.svg
+# Brand pattern art and the chart galleries, printed by the scripts under
+# examples/ and by wisent_plots.styles. The style module is the source; these
+# files are what it printed.
+assets/
+examples/
+# The repository root. Every file here is fixed by something outside this
+# project: pip reads pyproject.toml and MANIFEST.in, GitHub reads README.md and
+# LICENSE, git reads .gitignore, the release workflow reads
+# .wisent-release.json and released-surface.json, and the agent harness reads
+# .claudeignore. None of them can be moved into a sub-folder.
+.

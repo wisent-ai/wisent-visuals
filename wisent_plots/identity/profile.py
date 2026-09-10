@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Tuple
 
-from .banner import BannerConfig
+from ..banner import BannerConfig
 
 IDENTITY_SCHEMA_VERSION = 9
 

@@ -8,7 +8,7 @@ import urllib.parse
 import urllib.request
 from typing import Any, Dict, Iterable, Mapping, Optional, Tuple
 
-from ..repository_profile import BannerIdentity
+from ..identity import BannerIdentity
 from .model import CONFIG_PATH
 
 

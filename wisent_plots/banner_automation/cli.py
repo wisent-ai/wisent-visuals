@@ -41,7 +41,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print(f"{args.token_env} must contain a GitHub token for mutation", file=sys.stderr)
         return 2
     if args.command == "clear-unapproved-descriptions":
-        source = Path(__file__).parent.parent.joinpath("unapproved_descriptions.json")
+        source = Path(__file__).parent.parent.joinpath("identity", "unapproved_descriptions.json")
         document = json.loads(source.read_text(encoding="utf-8"))
         if document.get("schema") != 1 or not isinstance(document.get("repositories"), list):
             raise ValueError("unapproved_descriptions.json must contain schema 1 and repositories")
@@ -61,7 +61,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return 0
 
     if args.command == "sync-approved-descriptions":
-        source = Path(__file__).parent.parent.joinpath("approved_copy.json")
+        source = Path(__file__).parent.parent.joinpath("identity", "approved_copy.json")
         document = json.loads(source.read_text(encoding="utf-8"))
         if document.get("schema") != 1 or not isinstance(document.get("entries"), dict):
             raise ValueError("approved_copy.json must contain schema 1 and entries")
