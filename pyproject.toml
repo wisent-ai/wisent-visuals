@@ -36,9 +36,7 @@ dependencies = [
 [project.scripts]
 wisent-visuals-release = "wisent_release.__main__:entrypoint"
 
-
-[project.scripts]
-wisent-banner = "wisent_plots.banner_cli:main"
+wisent-banner = "wisent_plots.banner_rendering.cli:main"
 wisent-banner-bot = "wisent_plots.banner_bot:main"
 
 [project.optional-dependencies]

@@ -6,7 +6,7 @@ import pytest
 from PIL import Image, ImageChops
 
 from wisent_plots.banner import Banner, BannerConfig
-from wisent_plots.banner_cli import main
+from wisent_plots.banner_rendering.cli import main
 
 
 @pytest.fixture
