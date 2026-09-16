@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 from typing import Optional, Sequence
 
+from .audit import declare_tree
 from .engine import BannerBot
 from .github import GitHubClient
 
@@ -18,6 +19,7 @@ def build_parser() -> argparse.ArgumentParser:
         choices=(
             "plan",
             "sync",
+            "declare-local",
             "clear-unapproved-descriptions",
             "sync-approved-descriptions",
         ),
@@ -28,6 +30,26 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--direct", action="store_true")
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--token-env", default="WISENT_BANNER_GITHUB_TOKEN")
+    parser.add_argument(
+        "--root",
+        default=".",
+        help="checkout, or directory of checkouts, for declare-local",
+    )
+    parser.add_argument(
+        "--apply",
+        action="store_true",
+        help="declare-local writes the files; without it the run only reports",
+    )
+    parser.add_argument(
+        "--commit",
+        action="store_true",
+        help="declare-local commits the file it wrote in that checkout",
+    )
+    parser.add_argument(
+        "--push",
+        action="store_true",
+        help="declare-local pushes the commit it made",
+    )
     return parser
 
 
@@ -40,6 +62,27 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ):
         print(f"{args.token_env} must contain a GitHub token for mutation", file=sys.stderr)
         return 2
+    if args.command == "declare-local":
+        # No token and no network: this reads checkouts on this machine and
+        # writes the same declaration the publisher writes.
+        for declaration in declare_tree(
+            Path(args.root),
+            args.apply,
+            args.commit,
+            args.push,
+        ):
+            print(
+                json.dumps(
+                    {
+                        "repository": str(declaration.repository),
+                        "wrote": declaration.wrote,
+                        "reason": declaration.reason,
+                        "revision": declaration.revision,
+                    },
+                    ensure_ascii=False,
+                )
+            )
+        return 0
     if args.command == "clear-unapproved-descriptions":
         source = Path(__file__).parent.parent.joinpath("identity", "unapproved_descriptions.json")
         document = json.loads(source.read_text(encoding="utf-8"))
