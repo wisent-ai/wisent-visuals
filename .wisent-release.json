@@ -10,22 +10,9 @@
   "platforms": {
     "python": {
       "runner_platform": "linux-amd64",
-      "quality": [
-        {
-          "name": "release-metadata",
-          "argv": [
-            "python3",
-            "scripts/stado_release.py",
-            "quality"
-          ]
-        }
-      ],
+      "quality": [],
       "build": {
-        "argv": [
-          "python3",
-          "scripts/stado_release.py",
-          "build"
-        ]
+        "argv": ["stado", "product", "python", "build"]
       },
       "stage": {
         "release/python-distributions.tar": "release/python-distributions.tar"
@@ -43,11 +30,7 @@
     {
       "name": "pypi",
       "platform": "python",
-      "argv": [
-        "python3",
-        "scripts/stado_release.py",
-        "deliver-pypi"
-      ],
+      "argv": ["stado", "product", "python", "deliver-pypi"],
       "required": true,
       "secret_env": {
         "PYPI_TOKEN": "PYPI_TOKEN#token"
