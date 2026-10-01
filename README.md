@@ -167,26 +167,6 @@ python examples/area/test_area_charts_all_themes.py
 python examples/bubble/test_bubble_charts_all_themes.py
 ```
 
-### Running Real Tests
-
-```bash
-python -m pytest tests --basetemp build/test-artifacts
-```
-
-Tests use real SVG, Matplotlib, Pillow, and CLI rendering without opening a
-window. `WISENT_VISUALS_ARTIFACT_DIR` retains chart SVG, PNG, and style snapshots;
-the pytest artifact directory retains banner images and command reports.
-
-The live GitHub test requires `WISENT_BANNER_GITHUB_TOKEN` and
-`WISENT_BANNER_TEST_REPOSITORY` set to an isolated `owner/repository`.
-An authorized user token also works with the CLI; the scheduled workflow uses
-a GitHub App installation token.
-That initialized fixture must have the description
-`Wisent Visuals publication test fixture`, only its default branch, and no open PR.
-Use it exclusively for the test: the test creates and closes its PR, deletes its
-branch, and restores the original fixture files. Missing prerequisites are
-reported as skipped, never as a successful publication.
-
 ### Code Formatting
 
 ```bash
