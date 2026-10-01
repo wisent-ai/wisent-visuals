@@ -33,7 +33,7 @@
       "argv": ["stado", "product", "python", "deliver-pypi"],
       "required": true,
       "secret_env": {
-        "PYPI_TOKEN": "PYPI_TOKEN#token"
+        "PYPI_TOKEN": "pypi#token"
       }
     }
   ]
