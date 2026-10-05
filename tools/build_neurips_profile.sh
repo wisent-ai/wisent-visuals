@@ -13,7 +13,7 @@
 
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
-WORK="$HERE/.neurips_corpus"
+WORK="$HERE/../target/neurips-corpus"   # downloaded papers: a cache in the ignored build directory
 mkdir -p "$WORK"
 OUT="$HERE/neurips_profile.json"
 
@@ -87,20 +87,19 @@ for pdf in "$WORK"/p*.pdf; do
   # main-body vs back-matter split: the page where the References header starts
   # is the end of the main body. NeurIPS-style headers are letter-spaced
   # ("R EFERENCES"), so compare de-spaced+lowered. Form feeds (\f) delimit pages.
-  # has_appendix: an Appendix/Supplementary header after the references. A paper
-  # whose References header is not found has all three unmeasured (NA), and NA
-  # never enters a statistic.
-  mba=$(awk 'BEGIN{pg=1;refpg=0;mk=0}
+  # A paper whose References header is not found has both unmeasured (NA), and
+  # NA never enters a statistic. Whether a paper has an appendix is read from
+  # its LaTeX source below, where \appendix is explicit.
+  mba=$(awk 'BEGIN{pg=1;refpg=0}
     { n=gsub(/\f/,"\f"); line=$0; gsub(/\f/,"",line); d=line; gsub(/ /,"",d); dl=tolower(d);
       if(refpg==0 && dl=="references") refpg=pg;
-      if(mk==0 && (dl ~ /^appendix/||dl ~ /^supplementary/) && refpg>0 && pg>=refpg) mk=pg;
       pg+=n }
-    END{ if(refpg==0) print "NA NA NA"; else print refpg" "(pg-refpg)" "(mk>0?1:0) }' "$txt")
-  mb=${mba%% *}; rest=${mba#* }; bk=${rest%% *}; app=${rest##* }
+    END{ if(refpg==0) print "NA NA"; else print refpg" "(pg-refpg) }' "$txt")
+  mb=${mba%% *}; bk=${mba#* }
   # section presence (1/0)
   sec(){ awk -v p="$1" 'BEGIN{IGNORECASE=1} index(tolower($0),p){f=1} END{print f+0}' "$txt"; }
   rw=$(sec "related work"); ex=$(sec "experiment"); ab=$(sec "ablation"); lim=$(sec "limitation"); concl=$(sec "conclusion"); repro=$(sec "reproducib"); impact=$(sec "broader impact")
-  printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" "${pages:-NA}" "${figs:-NA}" "${tabs:-NA}" "$rw" "$ex" "$ab" "$lim" "$concl" "$repro" "$impact" "${mb:-NA}" "${bk:-NA}" "${app:-NA}" >> "$ROWS"
+  printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" "${pages:-NA}" "${figs:-NA}" "${tabs:-NA}" "$rw" "$ex" "$ab" "$lim" "$concl" "$repro" "$impact" "${mb:-NA}" "${bk:-NA}" >> "$ROWS"
 done
 
 echo "== section + appendix words (arXiv source: \\section boundaries) =="
@@ -125,6 +124,7 @@ for d in "$WORK"/p*.srcd; do
   main=""
   for tx in "$d"/*.tex; do [ -f "$tx" ] || continue; if awk '/\\begin\{document\}/{f=1}END{exit !f}' "$tx"; then main="$tx"; break; fi; done
   [ -n "$main" ] || continue
+  echo "SRC" >> "$SECROWS"
   expand_tex "$main" "$d" | awk '
     function mbucket(n,  l){ l=tolower(n);
       if(l ~ /introduction/) return "introduction";
@@ -139,8 +139,10 @@ for d in "$WORK"/p*.srcd; do
       if(l ~ /broader impact|societal|ethic/) return "broader_impact"; return "" }
     function isapp(n,  l){ l=tolower(n); return (l ~ /^appendix|supplementary/) }
     function isback(n,  l){ l=tolower(n); return (l ~ /references|acknowledg|author contribution/) }
+    # A section whose words were not read (an \input past the expansion depth)
+    # is unmeasured, so it is left out rather than counted as 0 words.
     function flush(   b,c){ if(cur!=""){
-        if(!inapp){ b=mbucket(cur); if(b!="") print "BUK\t"b"\t"w }
+        if(!inapp){ b=mbucket(cur); if(b!="" && w>0) print "BUK\t"b"\t"w }
         else if(appmode){ acount++; awords+=w; c=abucket(cur); if(c!=""&&!seen[c]){seen[c]=1; print "APXC\t"c} } } }
     /\\appendix([^a-zA-Z]|$)/ { flush(); inapp=1; appmode=1; cur=""; w=0; next }
     /\\section\*?\{/ { flush(); s=$0; match(s,/\\section\*?\{[^}]*\}/); h=substr(s,RSTART,RLENGTH); sub(/\\section\*?\{/,"",h); sub(/\}.*/,"",h);
@@ -154,6 +156,8 @@ secjson(){ set -- $1; printf '{"min_words":%s,"median_words":%s,"n":%s}' "$1" "$
 SECJSON=$(printf '{"introduction":%s,"related_work":%s,"experiments":%s,"conclusion":%s}' \
   "$(secjson "$(medb introduction)")" "$(secjson "$(medb related_work)")" "$(secjson "$(medb experiments)")" "$(secjson "$(medb conclusion)")")
 napx=$(awk -F'\t' '$1=="APXS"{n++}END{print n+0}' "$SECROWS")
+nsrc=$(awk '$1=="SRC"{n++}END{print n+0}' "$SECROWS")
+hasapp=$(awk -v a="$napx" -v s="$nsrc" 'BEGIN{ if(s>0) printf "%.2f", a/s; else printf "null" }')
 medcol(){ awk -F'\t' -v C="$1" '$1=="APXS"{a[++n]=$C} END{ for(i=1;i<=n;i++)for(j=i+1;j<=n;j++)if(a[j]<a[i]){t=a[i];a[i]=a[j];a[j]=t} print (n?((n%2)?a[int(n/2)+1]:int((a[n/2]+a[n/2+1])/2)):"null") }' "$SECROWS"; }
 asec=$(medcol 2); awrd=$(medcol 3)
 cfreq(){ awk -F'\t' -v C="$1" -v N="$napx" '$1=="APXC"&&$2==C{c++} END{ if(N>0) printf "%.2f", c/N; else printf "null" }' "$SECROWS"; }
@@ -180,12 +184,12 @@ awk '
     printf "  \"pages\":   {\"min\": %s, \"median\": %s, \"max\": %s},\n", a[1],a[2],a[3]
     printf "  \"main_body_pages\":   {\"min\": %s, \"median\": %s, \"max\": %s},\n", d[1],d[2],d[3]
     printf "  \"back_matter_pages\": {\"min\": %s, \"median\": %s, \"max\": %s},\n", e[1],e[2],e[3]
-    printf "  \"has_appendix_frac\": %s,\n", frac(13)
+    printf "  \"has_appendix_frac\": %s,\n", hasapp
     printf "  \"figures\": {\"min\": %s, \"median\": %s, \"max\": %s},\n", b[1],b[2],b[3]
     printf "  \"tables\":  {\"min\": %s, \"median\": %s, \"max\": %s},\n", c[1],c[2],c[3]
     printf "  \"section_freq\": {\"related_work\": %s, \"experiments\": %s, \"ablation\": %s, \"limitations\": %s, \"conclusion\": %s, \"reproducibility\": %s, \"broader_impact\": %s}\n",
            frac(4), frac(5), frac(6), frac(7), frac(8), frac(9), frac(10)
     printf "}\n"
-  }' FS='\t' "$ROWS" > "$OUT.tmp"
+  }' FS='\t' hasapp="$hasapp" "$ROWS" > "$OUT.tmp"
 jq --argjson sw "$SECJSON" --argjson ax "$APXJSON" '. + {section_words: $sw, appendix: $ax}' "$OUT.tmp" > "$OUT" && rm -f "$OUT.tmp"
 cat "$OUT"

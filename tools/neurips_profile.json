@@ -15,7 +15,7 @@
     "median": 16,
     "max": 64
   },
-  "has_appendix_frac": 0.89,
+  "has_appendix_frac": 1.00,
   "figures": {
     "min": 2,
     "median": 9,
@@ -37,18 +37,22 @@
   },
   "section_words": {
     "introduction": {
-      "median_words": 661,
-      "n": 20
+      "min_words": 418,
+      "median_words": 668,
+      "n": 19
     },
     "related_work": {
-      "median_words": 375,
-      "n": 15
+      "min_words": 180,
+      "median_words": 388,
+      "n": 14
     },
     "experiments": {
+      "min_words": 428,
       "median_words": 1336,
       "n": 16
     },
     "conclusion": {
+      "min_words": 53,
       "median_words": 264,
       "n": 21
     }
