@@ -43,7 +43,7 @@ pub(crate) const SECONDARY: Color = Color {
     hex: "#B0E3B3",
     rgb: [0xB0, 0xE3, 0xB3],
 };
-pub(crate) const FONT_FAMILY: &str = "Hubot Sans";
+pub(crate) use crate::brand::FONT_FAMILY;
 
 /// One artwork dot: centre x, centre y, radius, and opacity against the background.
 pub(crate) type Dot = (f64, f64, f64, f64);

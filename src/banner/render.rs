@@ -12,7 +12,7 @@ use image::{
 use super::text::{self, Fonts, Role, TextLine, Weight, BOLD_TTF, REGULAR_TTF};
 use super::{art, Banner, BACKGROUND, FONT_FAMILY, PRIMARY};
 
-const LOGO_PNG: &[u8] = include_bytes!("../../wisent_plots/assets/wisent-logo.png");
+use crate::brand::LOGO_PNG;
 
 impl Banner {
     /// The logo's position and size, and the visible top of the product wordmark.

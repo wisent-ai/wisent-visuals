@@ -4,10 +4,7 @@ use fontdue::{Font, FontSettings};
 
 use super::{Banner, Color, PRIMARY, SECONDARY};
 
-pub(super) const REGULAR_TTF: &[u8] =
-    include_bytes!("../../wisent_plots/assets/fonts/HubotSans-Regular.ttf");
-pub(super) const BOLD_TTF: &[u8] =
-    include_bytes!("../../wisent_plots/assets/fonts/HubotSans-Bold.ttf");
+pub(super) use crate::brand::{BOLD_TTF, REGULAR_TTF};
 
 /// The description area of the layout holds this many lines.
 const DESCRIPTION_LINES: usize = 3;

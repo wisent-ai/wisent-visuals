@@ -1,6 +1,7 @@
-//! Wisent README banners: the renderer (`banner`) and the organization bot
-//! (`bot`); and the release contract of the Python package (`release`).
+//! Wisent visuals: brand identity (`brand`), README banners (`banner`),
+//! brand charts (`chart`) and the organization banner bot (`bot`).
 
 pub mod banner;
 pub mod bot;
-pub mod release;
+pub mod brand;
+pub mod chart;

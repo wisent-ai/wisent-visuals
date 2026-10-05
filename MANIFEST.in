@@ -1,8 +1,0 @@
-include README.md
-include LICENSE
-include pyproject.toml
-recursive-include wisent_plots *.py
-recursive-include wisent_plots/assets *.png *.svg
-recursive-include wisent_plots/assets/fonts *.ttf *.txt
-recursive-include tests *.py
-recursive-include examples *.py

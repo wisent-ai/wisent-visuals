@@ -4,18 +4,18 @@
   "releases": true,
   "version_source": {
     "kind": "regex",
-    "path": "pyproject.toml",
-    "pattern": "(?m)^\\s*version\\s*=\\s*[\\\"'](?P<version>[0-9A-Za-z._-]+)[\\\"']"
+    "path": "Cargo.toml",
+    "pattern": "(?m)^version\\s*=\\s*\"(?P<version>[0-9]+\\.[0-9]+\\.[0-9]+)\"\\s*$"
   },
   "platforms": {
-    "python": {
+    "source": {
       "runner_platform": "linux-amd64",
       "quality": [],
       "build": {
-        "argv": ["stado", "product", "python", "build"]
+        "argv": ["stado", "product", "source-bundle"]
       },
       "stage": {
-        "release/python-distributions.tar": "release/python-distributions.tar"
+        "release/source-bundle.tar": "release/source-bundle.tar"
       }
     }
   },
@@ -26,15 +26,5 @@
     "reconcile": false
   },
   "inputs": {},
-  "deliveries": [
-    {
-      "name": "pypi",
-      "platform": "python",
-      "argv": ["stado", "product", "python", "deliver-pypi"],
-      "required": true,
-      "secret_env": {
-        "PYPI_TOKEN": "pypi#token"
-      }
-    }
-  ]
+  "deliveries": []
 }

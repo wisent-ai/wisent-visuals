@@ -4,14 +4,13 @@
 #
 # Rendered by `wisent-banner --config .github/banner.toml`:
 assets/readme-banner.svg
-# Brand pattern art and the chart galleries, printed by the scripts under
-# examples/ and by wisent_plots.styles. The style module is the source; these
-# files are what it printed.
+# Brand pattern art, fonts and logo, and the chart galleries drawn by
+# `wisent-chart` from the designs in src/chart/.
 assets/
 examples/
 # The repository root. Every file here is fixed by something outside this
-# project: pip reads pyproject.toml and MANIFEST.in, GitHub reads README.md and
+# project: cargo reads Cargo.toml and Cargo.lock, GitHub reads README.md and
 # LICENSE, git reads .gitignore, the release workflow reads
-# .wisent-release.json and released-surface.json, and the agent harness reads
-# .claudeignore. None of them can be moved into a sub-folder.
+# .wisent-release.json, and the agent harness reads .claudeignore. None of them
+# can be moved into a sub-folder.
 .
