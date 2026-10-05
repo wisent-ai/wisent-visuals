@@ -27,19 +27,9 @@ jobs:
       - name: Checkout generator
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: pip
-          cache-dependency-path: pyproject.toml
-
-      - name: Install generator
-        run: python -m pip install .
-
       - name: Open personalized banner pull requests
         env:
           WISENT_BANNER_GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          wisent-banner-bot sync \
+          cargo run --locked --release --bin wisent-banner-bot -- sync \
             --org wisent-ai

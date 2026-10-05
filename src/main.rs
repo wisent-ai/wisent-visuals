@@ -1,13 +1,11 @@
 //! `wisent-banner`: render a deterministic Wisent README banner from a TOML configuration.
 
-mod banner;
-
 use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::Parser;
 
-use banner::{Banner, BannerConfig};
+use wisent_visuals::banner::{Banner, BannerConfig};
 
 #[derive(Parser)]
 #[command(

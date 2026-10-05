@@ -156,10 +156,11 @@ The filename selects the image format. `dpi=None` uses the figure's resolution;
 
 ## Development
 
-`wisent-banner` is a Rust binary (`src/`, `cargo install --path .`) that owns
-artwork selection, seeded geometry, typography and rendering. `banner_automation/`
-owns GitHub requests, publication plans, README updates, and bot command dispatch,
-and still renders through the Python `Banner` until it is ported.
+The README banners are a Rust crate (`src/`): `wisent-banner` renders one banner
+from a TOML file and `wisent-banner-bot` keeps every organization repository's
+banner and buttons current (see `docs/readme-banners.md`). `cargo test` runs
+both through their real binaries. The Python `wisent_plots.Banner` export
+remains only until the chart package is ported and its `__init__.py` goes.
 
 ### Running Examples
 

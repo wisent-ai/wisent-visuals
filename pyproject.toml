@@ -36,8 +36,6 @@ dependencies = [
 [project.scripts]
 wisent-visuals-release = "wisent_release.__main__:entrypoint"
 
-wisent-banner-bot = "wisent_plots.banner_bot:main"
-
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0.0",
@@ -59,8 +57,6 @@ include = ["wisent_plots*", "wisent_release*"]
 [tool.setuptools.package-data]
 wisent_plots = [
     "assets/*.svg",
-    "identity/approved_copy.json",
-    "identity/unapproved_descriptions.json",
     "assets/*.png",
     "assets/large/*.svg",
     "assets/fonts/*.ttf",

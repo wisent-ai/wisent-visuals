@@ -1,7 +1,6 @@
 //! The banner drawn as a self-contained SVG, or rasterised to WebP or PNG.
 
-use std::fs::{self, File};
-use std::io::BufWriter;
+use std::fs;
 use std::path::Path;
 
 use base64::{engine::general_purpose::STANDARD, Engine as _};
@@ -119,8 +118,22 @@ impl Banner {
         Ok(image)
     }
 
+    /// The banner as lossless WebP bytes, so no quality setting is involved.
+    pub fn render_webp(&self) -> Result<Vec<u8>, String> {
+        let rgb = DynamicImage::ImageRgba8(self.render_image()?).to_rgb8();
+        let mut bytes = Vec::new();
+        WebPEncoder::new_lossless(&mut bytes)
+            .write_image(
+                rgb.as_raw(),
+                rgb.width(),
+                rgb.height(),
+                ExtendedColorType::Rgb8,
+            )
+            .map_err(|e| format!("WebP encoding failed: {e}"))?;
+        Ok(bytes)
+    }
+
     /// Render to `path`, the format chosen by its .svg, .webp, or .png suffix.
-    /// WebP is written lossless, so no quality setting is involved.
     pub fn save(&self, path: &Path) -> Result<(), String> {
         let shown = path.display();
         if let Some(parent) = path.parent().filter(|p| !p.as_os_str().is_empty()) {
@@ -133,16 +146,7 @@ impl Banner {
         match suffix.as_deref() {
             Some("svg") => fs::write(path, self.render_svg()?).map_err(|e| format!("{shown}: {e}")),
             Some("webp") => {
-                let rgb = DynamicImage::ImageRgba8(self.render_image()?).to_rgb8();
-                let file = File::create(path).map_err(|e| format!("{shown}: {e}"))?;
-                WebPEncoder::new_lossless(BufWriter::new(file))
-                    .write_image(
-                        rgb.as_raw(),
-                        rgb.width(),
-                        rgb.height(),
-                        ExtendedColorType::Rgb8,
-                    )
-                    .map_err(|e| format!("{shown}: {e}"))
+                fs::write(path, self.render_webp()?).map_err(|e| format!("{shown}: {e}"))
             }
             Some("png") => DynamicImage::ImageRgba8(self.render_image()?)
                 .to_rgb8()

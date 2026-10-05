@@ -37,27 +37,26 @@ output.
 
 ### Automatic organization-wide presentation
 
-`wisent-banner-bot` never writes product copy from repository metadata. Approved
-titles and optional descriptions live in
-`wisent_plots/identity/approved_copy.json`, with the conversation session and timestamp
-that authorized each entry.
+`wisent-banner-bot` is the second binary of this crate
+(`cargo run --release --bin wisent-banner-bot -- <command>`). It never writes
+product copy from repository metadata. Approved titles and optional descriptions
+live in `identity/approved_copy.json`, with the conversation session and
+timestamp that authorized each entry; the register is compiled into the binary.
 
-Repository descriptions, topics, languages, and README text select artwork only:
+Artwork is never guessed from words in a description, topics or README. A
+repository whose banner the bot already published keeps the layout and category
+written in its own `.github/banner.toml`. A repository without one gets the
+layout its name's SHA-256 selects (category `seeded`), so the same repository
+always receives the same artwork; edit the layout in its `banner.toml` to choose
+another.
 
-- routing graphs for gateways and model routers;
-- measured bars for benchmarks and visualization;
-- orbits for agent systems;
-- waveforms for audio projects;
-- stacked layers for storage and context;
-- latent activation fields for models and safety;
-- coordinated signals for SDKs, clients, and general developer tools.
-
-A repository without approved copy receives only its display name and no
-description. The generated TOML records `copy_status` and `approved_in`; changing
-the approval register changes the source fingerprint and regenerates the assets.
+A repository without approved copy receives its repository name as the title and
+no description; a title the bot published earlier without approval is kept. The
+generated TOML records `copy_status` and `approved_in`; changing the approval
+register changes the source fingerprint and regenerates the assets.
 
 Descriptions previously introduced by the removed copy table are listed in
-`wisent_plots/identity/unapproved_descriptions.json`. Clear only those audited values
+`identity/unapproved_descriptions.json`. Clear only those audited values
 with:
 
 ```bash
@@ -74,6 +73,26 @@ Preview decisions without changing GitHub:
 
 ```bash
 wisent-banner-bot plan --org wisent-ai --limit 10
+```
+
+`--limit` is optional: without it every repository is planned. `--exclude`
+(repeatable) names repositories to leave alone and defaults to `wisent`;
+`--include` (repeatable) restricts the run to the named repositories.
+
+Mutating commands (`sync`, `clear-unapproved-descriptions`,
+`sync-approved-descriptions`) refuse with exit 2 when `--token-env` (default
+`WISENT_BANNER_GITHUB_TOKEN`) is empty. Any other failure ends the run with exit 1
+and GitHub's own status and body, for example
+`GitHub GET /orgs/x/repos?… failed (404): {"message":"Not Found",…}`. Nothing is
+retried within a run: the next scheduled run starts over, and every write first
+compares what the branch already holds, so a stopped run is finished by the next.
+Repository listings follow GitHub's own `Link: rel="next"` pages; a file larger
+than the contents API returns inline is read from its git blob.
+
+Declare already-published banners in local checkouts, without a token:
+
+```bash
+wisent-banner-bot declare-local --root ~/code --apply --commit --push
 ```
 
 The 15-minute `banner-bot.yml` workflow uses an organization-installed GitHub App
