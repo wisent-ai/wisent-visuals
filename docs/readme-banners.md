@@ -16,7 +16,8 @@ width = 1584
 height = 396
 ```
 
-Generate the committed README image and its editable, self-contained SVG source:
+Generate the committed README image and its editable, self-contained SVG source
+with the `wisent-banner` binary (`cargo install --path .` in this repository):
 
 ```bash
 wisent-banner \
@@ -25,10 +26,14 @@ wisent-banner \
   --svg assets/readme-banner.svg
 ```
 
-The renderer bundles Hubot Sans, validates dimensions and supported layouts, and
-produces byte-identical output for the same configuration. Commit both the TOML
-configuration and generated assets; CI can rerun this command and use
-`git diff --exit-code` to detect stale output.
+The renderer bundles Hubot Sans and the Wisent logo, validates layouts and
+themes, and produces byte-identical output for the same configuration. WebP is
+written lossless, so no quality setting exists. Any positive width and height is
+accepted; the design scales with the height. A description that needs more than
+the banner's three lines at its smallest size is refused, naming how many lines it
+needs, instead of being cut. Commit both the TOML configuration and generated
+assets; CI can rerun this command and use `git diff --exit-code` to detect stale
+output.
 
 ### Automatic organization-wide presentation
 

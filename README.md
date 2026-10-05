@@ -156,9 +156,10 @@ The filename selects the image format. `dpi=None` uses the figure's resolution;
 
 ## Development
 
-`banner_rendering/` owns artwork selection, seeded geometry, typography, and
-the render CLI. `banner_automation/` owns GitHub requests, publication plans,
-README updates, and bot command dispatch; public `Banner` and bot APIs remain intact.
+`wisent-banner` is a Rust binary (`src/`, `cargo install --path .`) that owns
+artwork selection, seeded geometry, typography and rendering. `banner_automation/`
+owns GitHub requests, publication plans, README updates, and bot command dispatch,
+and still renders through the Python `Banner` until it is ported.
 
 ### Running Examples
 

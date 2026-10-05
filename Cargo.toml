@@ -1,0 +1,20 @@
+[package]
+name = "wisent-visuals"
+version = "0.3.0"
+edition = "2021"
+description = "Deterministic Wisent README banners"
+license = "MIT"
+publish = false
+
+[[bin]]
+name = "wisent-banner"
+path = "src/main.rs"
+
+[dependencies]
+base64 = "0.22"
+clap = { version = "4", features = ["derive"] }
+fontdue = "0.9"
+image = "0.25"
+serde = { version = "1", features = ["derive"] }
+sha2 = "0.10"
+toml = "0.8"
