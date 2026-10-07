@@ -10,7 +10,7 @@
   "platforms": {
     "source": {
       "runner_platform": "linux-amd64",
-      "quality": [],
+      "quality": [{"name": "fmt", "argv": ["cargo", "fmt", "--all", "--", "--check"]}],
       "build": {
         "argv": ["stado", "product", "source-bundle"]
       },
