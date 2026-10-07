@@ -36,7 +36,14 @@ fn anchor(angle: f64) -> &'static str {
     }
 }
 
-pub(super) fn draw(svg: &mut Element, spec: &Spec, colors: &Colors, angles: &[f64], distances: &[f64], categories: Option<&[usize]>) {
+pub(super) fn draw(
+    svg: &mut Element,
+    spec: &Spec,
+    colors: &Colors,
+    angles: &[f64],
+    distances: &[f64],
+    categories: Option<&[usize]>,
+) {
     let cx = (spec.width / 2.0).floor();
     let cy = ((spec.height + CHART_TOP_MARGIN) / 2.0).floor();
     let max_radius = (spec.width.min(spec.height - CHART_TOP_MARGIN) / 2.0).floor() - RING_MARGIN;
@@ -54,7 +61,14 @@ pub(super) fn draw(svg: &mut Element, spec: &Spec, colors: &Colors, angles: &[f6
                 .attr("opacity", RING_OPACITY),
         );
         let label = format!("{:02}", (share * FULL_SCALE).round() as u32);
-        svg.child(text(cx, cy - radius - RING_LABEL_GAP, &colors["axis_text"], RING_LABEL_SIZE, "middle", &label));
+        svg.child(text(
+            cx,
+            cy - radius - RING_LABEL_GAP,
+            &colors["axis_text"],
+            RING_LABEL_SIZE,
+            "middle",
+            &label,
+        ));
     }
     for axis in 0..AXES {
         let degrees = f64::from(axis) * 360.0 / f64::from(AXES) - 90.0;
@@ -81,10 +95,17 @@ pub(super) fn draw(svg: &mut Element, spec: &Spec, colors: &Colors, angles: &[f6
         ));
     }
     let (size_min, size_max) = bounds(&spec.sizes);
-    for (index, ((angle, distance), size)) in angles.iter().zip(distances).zip(&spec.sizes).enumerate() {
+    for (index, ((angle, distance), size)) in
+        angles.iter().zip(distances).zip(&spec.sizes).enumerate()
+    {
         let theta = (angle - 90.0).to_radians();
         let reach = distance / FULL_SCALE * max_radius;
         let radius = MIN_RADIUS + share(*size, size_min, size_max) * (MAX_RADIUS - MIN_RADIUS);
-        svg.child(bubble(cx + reach * theta.cos(), cy + reach * theta.sin(), radius, point_color(colors, categories, index)));
+        svg.child(bubble(
+            cx + reach * theta.cos(),
+            cy + reach * theta.sin(),
+            radius,
+            point_color(colors, categories, index),
+        ));
     }
 }

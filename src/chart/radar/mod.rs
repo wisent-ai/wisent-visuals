@@ -67,20 +67,64 @@ fn brand(role: &str) -> &'static str {
 /// as its palette, and the matching strokes.
 fn theme(style: u32) -> Result<(Colors, [&'static str; 2]), String> {
     let (background, title, legend, axis_text, grid, axis, fills, strokes) = match style {
-        1 => (brand("surface"), brand("primary"), brand("muted"), "#A9A9A9", brand("grid"), "#4A4A4A", [brand("tertiary"), "#FA5A46"], [brand("deep"), "#D94435"]),
-        2 => (brand("surface"), "#FFFFFF", "#A9A9A9", "#A9A9A9", brand("grid"), "#4A4A4A", ["#C8C8C8", "#606060"], ["#909090", "#303030"]),
-        3 => ("#FFFFFF", "#000000", "#666666", "#666666", "#E5E5E5", "#CCCCCC", ["#484848", "#909090"], ["#303030", "#606060"]),
-        other => return Err(format!("Radar style must be 1 (brand), 2 (black) or 3 (white), got {other}")),
+        1 => (
+            brand("surface"),
+            brand("primary"),
+            brand("muted"),
+            "#A9A9A9",
+            brand("grid"),
+            "#4A4A4A",
+            [brand("tertiary"), "#FA5A46"],
+            [brand("deep"), "#D94435"],
+        ),
+        2 => (
+            brand("surface"),
+            "#FFFFFF",
+            "#A9A9A9",
+            "#A9A9A9",
+            brand("grid"),
+            "#4A4A4A",
+            ["#C8C8C8", "#606060"],
+            ["#909090", "#303030"],
+        ),
+        3 => (
+            "#FFFFFF",
+            "#000000",
+            "#666666",
+            "#666666",
+            "#E5E5E5",
+            "#CCCCCC",
+            ["#484848", "#909090"],
+            ["#303030", "#606060"],
+        ),
+        other => {
+            return Err(format!(
+                "Radar style must be 1 (brand), 2 (black) or 3 (white), got {other}"
+            ))
+        }
     };
     let colors = Colors::new(
-        &[("background", background), ("title", title), ("legend_text", legend), ("axis_text", axis_text), ("grid", grid), ("axis", axis)],
+        &[
+            ("background", background),
+            ("title", title),
+            ("legend_text", legend),
+            ("axis_text", axis_text),
+            ("grid", grid),
+            ("axis", axis),
+        ],
         &fills,
     );
     Ok((colors, strokes))
 }
 
 fn text(x: f64, y: f64, fill: &str, size: f64, content: &str) -> Element {
-    Element::new("text").attr("x", x).attr("y", y).attr("fill", fill).attr("font-size", size).attr("font-weight", "400").text(content)
+    Element::new("text")
+        .attr("x", x)
+        .attr("y", y)
+        .attr("fill", fill)
+        .attr("font-size", size)
+        .attr("font-weight", "400")
+        .text(content)
 }
 
 /// The angle of axis `index` of `axes`, clockwise from twelve o'clock.
@@ -94,11 +138,24 @@ pub fn render(spec: &Spec) -> Result<String, String> {
     if axes == 0 {
         return Err("a radar chart needs at least one series with at least one value".to_string());
     }
-    if let Some(index) = spec.data_series.iter().position(|series| series.len() != axes) {
-        return Err(format!("series {index} has {} values but series 0 has {axes}", spec.data_series[index].len()));
+    if let Some(index) = spec
+        .data_series
+        .iter()
+        .position(|series| series.len() != axes)
+    {
+        return Err(format!(
+            "series {index} has {} values but series 0 has {axes}",
+            spec.data_series[index].len()
+        ));
     }
     let mut svg = chart_frame(spec.width, spec.height, &colors["background"]);
-    svg.child(text(PADDING, PADDING + TITLE_SIZE, &colors["title"], TITLE_SIZE, spec.title.as_deref().unwrap_or("Radar chart")));
+    svg.child(text(
+        PADDING,
+        PADDING + TITLE_SIZE,
+        &colors["title"],
+        TITLE_SIZE,
+        spec.title.as_deref().unwrap_or("Radar chart"),
+    ));
     let legend_y = PADDING + LEGEND_OFFSET;
     let mut legend_x = PADDING;
     for (index, label) in spec.labels.iter().enumerate() {
@@ -113,7 +170,13 @@ pub fn render(spec: &Spec) -> Result<String, String> {
                 .attr("rx", SWATCH_RADIUS)
                 .attr("ry", SWATCH_RADIUS),
         );
-        svg.child(text(legend_x + SWATCH + LABEL_GAP, legend_y + LABEL_BASELINE, &colors["legend_text"], LABEL_SIZE, label));
+        svg.child(text(
+            legend_x + SWATCH + LABEL_GAP,
+            legend_y + LABEL_BASELINE,
+            &colors["legend_text"],
+            LABEL_SIZE,
+            label,
+        ));
         legend_x += SWATCH + LABEL_GAP + text_width(label, LABEL_SIZE)? + ENTRY_GAP;
     }
     let available_height = spec.height - TITLE_HEIGHT - PADDING * 2.0;
@@ -132,9 +195,20 @@ pub fn render(spec: &Spec) -> Result<String, String> {
                 .attr("stroke-width", "1")
                 .attr("opacity", RING_OPACITY),
         );
-        svg.child(text(cx, cy - radius - RING_LABEL_GAP, &colors["axis_text"], LABEL_SIZE, &(share * FULL_SCALE).trunc().to_string()).attr("text-anchor", "middle"));
+        svg.child(
+            text(
+                cx,
+                cy - radius - RING_LABEL_GAP,
+                &colors["axis_text"],
+                LABEL_SIZE,
+                &(share * FULL_SCALE).trunc().to_string(),
+            )
+            .attr("text-anchor", "middle"),
+        );
     }
-    let default_labels: Vec<String> = (0..axes).map(|index| (index * 360 / axes).to_string()).collect();
+    let default_labels: Vec<String> = (0..axes)
+        .map(|index| (index * 360 / axes).to_string())
+        .collect();
     let axis_labels = spec.axis_labels.as_ref().unwrap_or(&default_labels);
     for index in 0..axes {
         let theta = angle(index, axes);
@@ -158,7 +232,16 @@ pub fn render(spec: &Spec) -> Result<String, String> {
             } else {
                 "middle"
             };
-            svg.child(text(x, y + AXIS_LABEL_BASELINE, &colors["axis_text"], AXIS_LABEL_SIZE, label).attr("text-anchor", anchor));
+            svg.child(
+                text(
+                    x,
+                    y + AXIS_LABEL_BASELINE,
+                    &colors["axis_text"],
+                    AXIS_LABEL_SIZE,
+                    label,
+                )
+                .attr("text-anchor", anchor),
+            );
         }
     }
     for (index, series) in spec.data_series.iter().enumerate() {
@@ -167,7 +250,11 @@ pub fn render(spec: &Spec) -> Result<String, String> {
             .enumerate()
             .map(|(axis, value)| {
                 let (theta, distance) = (angle(axis, axes), value / FULL_SCALE * max_radius);
-                format!("{},{}", cx + distance * theta.cos(), cy + distance * theta.sin())
+                format!(
+                    "{},{}",
+                    cx + distance * theta.cos(),
+                    cy + distance * theta.sin()
+                )
             })
             .collect();
         svg.child(

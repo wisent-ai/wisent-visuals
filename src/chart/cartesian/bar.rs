@@ -42,16 +42,27 @@ pub fn render(common: &Spec) -> Result<String, String> {
         PADDING_Y,
         TITLE_GAP,
         CHART_TOP_MARGIN,
-        LegendFills::Given { fills: &fills, extra: Some(&first) },
+        LegendFills::Given {
+            fills: &fills,
+            extra: Some(&first),
+        },
     )?;
     let chart_x = PADDING_X;
     let chart_width = common.width - 2.0 * PADDING_X;
     let available_width = chart_width - LABEL_COLUMN;
     let max_value = (0..common.categories.len())
-        .map(|category| common.series.iter().map(|values| values[category]).sum::<f64>())
+        .map(|category| {
+            common
+                .series
+                .iter()
+                .map(|values| values[category])
+                .sum::<f64>()
+        })
         .fold(f64::MIN, f64::max);
     if max_value <= 0.0 {
-        return Err(format!("the largest stacked total is {max_value}, so no bar has a length to scale"));
+        return Err(format!(
+            "the largest stacked total is {max_value}, so no bar has a length to scale"
+        ));
     }
     for (index, category) in common.categories.iter().enumerate() {
         let y = chart_start_y + index as f64 * (BAR_HEIGHT + BAR_SPACING);
@@ -78,7 +89,8 @@ pub fn render(common: &Spec) -> Result<String, String> {
             current_x += width;
         }
     }
-    let axis_y = chart_start_y + common.categories.len() as f64 * (BAR_HEIGHT + BAR_SPACING) + AXIS_OFFSET;
+    let axis_y =
+        chart_start_y + common.categories.len() as f64 * (BAR_HEIGHT + BAR_SPACING) + AXIS_OFFSET;
     let last = f64::from(TICKS - 1);
     for tick in 0..TICKS {
         let share = f64::from(tick) / last;

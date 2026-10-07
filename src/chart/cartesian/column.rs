@@ -45,14 +45,24 @@ pub fn render(common: &Spec) -> Result<String, String> {
         PADDING_Y,
         TITLE_GAP,
         CHART_TOP_MARGIN,
-        LegendFills::Given { fills: &fills, extra: Some(&first) },
+        LegendFills::Given {
+            fills: &fills,
+            extra: Some(&first),
+        },
     )?;
     let chart_x = PADDING_X;
     let chart_width = common.width - 2.0 * PADDING_X;
     let chart_height = common.height - PADDING_Y - chart_start_y - AXIS_LABEL_ROOM;
-    let max_value = common.series.iter().flatten().copied().fold(f64::MIN, f64::max);
+    let max_value = common
+        .series
+        .iter()
+        .flatten()
+        .copied()
+        .fold(f64::MIN, f64::max);
     if max_value <= 0.0 {
-        return Err(format!("the largest value is {max_value}, so no column has a height to scale"));
+        return Err(format!(
+            "the largest value is {max_value}, so no column has a height to scale"
+        ));
     }
     let y_max = max_value * HEADROOM;
     for step in 0..=Y_STEPS {
@@ -79,7 +89,10 @@ pub fn render(common: &Spec) -> Result<String, String> {
             let column_height = values[index] / y_max * chart_height;
             svg.child(
                 Element::new("rect")
-                    .attr("x", columns_start_x + series as f64 * (COLUMN_WIDTH + COLUMN_SPACING))
+                    .attr(
+                        "x",
+                        columns_start_x + series as f64 * (COLUMN_WIDTH + COLUMN_SPACING),
+                    )
                     .attr("y", chart_start_y + chart_height - column_height)
                     .attr("width", COLUMN_WIDTH)
                     .attr("height", column_height)

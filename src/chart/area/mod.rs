@@ -32,11 +32,20 @@ const BANDS: usize = 3;
 /// The edge design's band opacities, bottom to top.
 const EDGE_OPACITY: [f64; BANDS] = [1.0, 0.5, 0.4];
 /// The gradient design's stops per band, bottom to top: (id, at the bottom, at the top).
-const GRADIENTS: [(&str, &str, &str); BANDS] =
-    [("grad-bottom", "#C5FFC8", "#7FA682"), ("grad-middle", "#90B892", "#5F7861"), ("grad-top", "#5A715B", "#3D4D3E")];
+const GRADIENTS: [(&str, &str, &str); BANDS] = [
+    ("grad-bottom", "#C5FFC8", "#7FA682"),
+    ("grad-middle", "#90B892", "#5F7861"),
+    ("grad-top", "#5A715B", "#3D4D3E"),
+];
 const CLIP_ID: &str = "chart-clip";
 
-const STYLE_NAMES: [(&str, u32); 5] = [("solid", 1), ("gradient", 2), ("pattern", 3), ("2patterns", 4), ("minimal", 5)];
+const STYLE_NAMES: [(&str, u32); 5] = [
+    ("solid", 1),
+    ("gradient", 2),
+    ("pattern", 3),
+    ("2patterns", 4),
+    ("minimal", 5),
+];
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -59,7 +68,12 @@ fn brand(role: &str) -> &'static str {
 /// The card colours every design shares, with the legend palette `series`.
 fn colors(series: &[&str]) -> Colors {
     Colors::new(
-        &[("background", brand("surface")), ("title", brand("primary")), ("legend_text", brand("muted")), ("grid", brand("grid"))],
+        &[
+            ("background", brand("surface")),
+            ("title", brand("primary")),
+            ("legend_text", brand("muted")),
+            ("grid", brand("grid")),
+        ],
         series,
     )
 }
@@ -85,46 +99,108 @@ fn design(style: u32, defs: &mut Element) -> Result<Design, String> {
     Ok(match style {
         1 => {
             let legend = greens.series().to_vec();
-            Design { legend, colors: greens, fills: [area.clone(), area.clone(), area], opacity: Some(EDGE_OPACITY), top_first: true }
+            Design {
+                legend,
+                colors: greens,
+                fills: [area.clone(), area.clone(), area],
+                opacity: Some(EDGE_OPACITY),
+                top_first: true,
+            }
         }
         2 => {
             for (id, bottom, top) in GRADIENTS {
                 let gradient = defs.child(
-                    Element::new("linearGradient").attr("id", id).attr("x1", "0%").attr("y1", "100%").attr("x2", "0%").attr("y2", "0%"),
+                    Element::new("linearGradient")
+                        .attr("id", id)
+                        .attr("x1", "0%")
+                        .attr("y1", "100%")
+                        .attr("x2", "0%")
+                        .attr("y2", "0%"),
                 );
-                gradient.child(Element::new("stop").attr("offset", "0%").attr("style", format!("stop-color:{bottom};stop-opacity:1")));
-                gradient.child(Element::new("stop").attr("offset", "100%").attr("style", format!("stop-color:{top};stop-opacity:1")));
+                gradient.child(
+                    Element::new("stop")
+                        .attr("offset", "0%")
+                        .attr("style", format!("stop-color:{bottom};stop-opacity:1")),
+                );
+                gradient.child(
+                    Element::new("stop")
+                        .attr("offset", "100%")
+                        .attr("style", format!("stop-color:{top};stop-opacity:1")),
+                );
             }
             let fills = GRADIENTS.map(|(id, _, _)| url(id));
-            Design { legend: fills.to_vec(), colors: greens, fills, opacity: None, top_first: true }
+            Design {
+                legend: fills.to_vec(),
+                colors: greens,
+                fills,
+                opacity: None,
+                top_first: true,
+            }
         }
         3 => {
             load_pattern(defs, "pattern-middle", Pattern::CrossingLines)?;
             load_pattern(defs, "pattern-top", Pattern::NoiseLarge)?;
             let fills = [area, url("pattern-middle"), url("pattern-top")];
-            Design { legend: fills.to_vec(), colors: greens, fills, opacity: None, top_first: true }
+            Design {
+                legend: fills.to_vec(),
+                colors: greens,
+                fills,
+                opacity: None,
+                top_first: true,
+            }
         }
         4 => {
             load_pattern(defs, "pattern-bottom", Pattern::VerticalLines)?;
             load_pattern(defs, "pattern-middle", Pattern::DiagonalLines)?;
             load_pattern(defs, "pattern-top", Pattern::DitherLarge)?;
-            let fills = [url("pattern-bottom"), url("pattern-middle"), url("pattern-top")];
-            Design { legend: fills.to_vec(), colors: greens, fills, opacity: None, top_first: false }
+            let fills = [
+                url("pattern-bottom"),
+                url("pattern-middle"),
+                url("pattern-top"),
+            ];
+            Design {
+                legend: fills.to_vec(),
+                colors: greens,
+                fills,
+                opacity: None,
+                top_first: false,
+            }
         }
         5 => {
             let solid = colors(&[brand("primary"), "#FA5A46", "#B19ECC"]);
-            let fills = [solid.series()[0].clone(), solid.series()[1].clone(), solid.series()[2].clone()];
-            Design { legend: fills.to_vec(), colors: solid, fills, opacity: None, top_first: false }
+            let fills = [
+                solid.series()[0].clone(),
+                solid.series()[1].clone(),
+                solid.series()[2].clone(),
+            ];
+            Design {
+                legend: fills.to_vec(),
+                colors: solid,
+                fills,
+                opacity: None,
+                top_first: false,
+            }
         }
         other => return Err(format!("Area style must be between 1 and 5, got {other}")),
     })
 }
 
 /// Each band's outline: along its baseline left to right, back along its top.
-fn band_paths(x_count: usize, series: &[Vec<f64>], left: f64, top: f64, width: f64, height: f64) -> Result<Vec<String>, String> {
-    let max = (0..x_count).map(|index| series.iter().map(|values| values[index]).sum::<f64>()).fold(f64::MIN, f64::max);
+fn band_paths(
+    x_count: usize,
+    series: &[Vec<f64>],
+    left: f64,
+    top: f64,
+    width: f64,
+    height: f64,
+) -> Result<Vec<String>, String> {
+    let max = (0..x_count)
+        .map(|index| series.iter().map(|values| values[index]).sum::<f64>())
+        .fold(f64::MIN, f64::max);
     if max <= 0.0 {
-        return Err(format!("the largest stacked total is {max}, so no band has a height to scale"));
+        return Err(format!(
+            "the largest stacked total is {max}, so no band has a height to scale"
+        ));
     }
     let bottom = top + height;
     let x_at = |index: usize| left + index as f64 * width / (x_count - 1) as f64;
@@ -137,7 +213,11 @@ fn band_paths(x_count: usize, series: &[Vec<f64>], left: f64, top: f64, width: f
             path.push_str(&format!(" L {},{}", x_at(index), y_at(*base)));
         }
         for index in (0..x_count).rev() {
-            path.push_str(&format!(" L {},{}", x_at(index), y_at(baseline[index] + values[index])));
+            path.push_str(&format!(
+                " L {},{}",
+                x_at(index),
+                y_at(baseline[index] + values[index])
+            ));
         }
         path.push_str(" Z");
         paths.push(path);
@@ -150,19 +230,43 @@ fn band_paths(x_count: usize, series: &[Vec<f64>], left: f64, top: f64, width: f
 
 /// The most fractional digits any of `values` is written with.
 fn precision(values: &[f64]) -> usize {
-    values.iter().map(|value| value.to_string().split_once('.').map(|(_, fraction)| fraction.len()).unwrap_or(0)).max().unwrap_or(0)
+    values
+        .iter()
+        .map(|value| {
+            value
+                .to_string()
+                .split_once('.')
+                .map(|(_, fraction)| fraction.len())
+                .unwrap_or(0)
+        })
+        .max()
+        .unwrap_or(0)
 }
 
 pub fn render(spec: &Spec) -> Result<String, String> {
     let style = spec.style.resolve(&STYLE_NAMES)?;
     if spec.y_series.len() != BANDS {
-        return Err(format!("the area designs stack {BANDS} series, got {}", spec.y_series.len()));
+        return Err(format!(
+            "the area designs stack {BANDS} series, got {}",
+            spec.y_series.len()
+        ));
     }
     if spec.x.len() < 2 {
-        return Err(format!("an area chart needs at least two x values, got {}", spec.x.len()));
+        return Err(format!(
+            "an area chart needs at least two x values, got {}",
+            spec.x.len()
+        ));
     }
-    if let Some(index) = spec.y_series.iter().position(|series| series.len() != spec.x.len()) {
-        return Err(format!("series {index} has {} values but there are {} x values", spec.y_series[index].len(), spec.x.len()));
+    if let Some(index) = spec
+        .y_series
+        .iter()
+        .position(|series| series.len() != spec.x.len())
+    {
+        return Err(format!(
+            "series {index} has {} values but there are {} x values",
+            spec.y_series[index].len(),
+            spec.x.len()
+        ));
     }
     let mut svg = chart_frame(spec.width, spec.height, brand("surface"));
     let design = design(style, svg.find_or_insert("defs"))?;
@@ -177,7 +281,10 @@ pub fn render(spec: &Spec) -> Result<String, String> {
         PADDING_Y,
         TITLE_GAP,
         CHART_TOP_MARGIN,
-        LegendFills::Given { fills: &design.legend, extra: Some(&colors.series()[0]) },
+        LegendFills::Given {
+            fills: &design.legend,
+            extra: Some(&colors.series()[0]),
+        },
     )?;
     let chart_x = PADDING_X;
     let chart_width = spec.width - 2.0 * PADDING_X;
@@ -185,8 +292,21 @@ pub fn render(spec: &Spec) -> Result<String, String> {
     let plot_height = chart_height - X_LABEL_ROOM;
     svg.find_or_insert("defs")
         .child(Element::new("clipPath").attr("id", CLIP_ID))
-        .child(Element::new("rect").attr("x", chart_x).attr("y", chart_y).attr("width", chart_width).attr("height", plot_height));
-    let paths = band_paths(spec.x.len(), &spec.y_series, chart_x, chart_y, chart_width, plot_height)?;
+        .child(
+            Element::new("rect")
+                .attr("x", chart_x)
+                .attr("y", chart_y)
+                .attr("width", chart_width)
+                .attr("height", plot_height),
+        );
+    let paths = band_paths(
+        spec.x.len(),
+        &spec.y_series,
+        chart_x,
+        chart_y,
+        chart_width,
+        plot_height,
+    )?;
     let digits = precision(&spec.x);
     for (index, value) in spec.x.iter().enumerate() {
         let x = chart_x + index as f64 * chart_width / (spec.x.len() - 1) as f64;
@@ -211,13 +331,22 @@ pub fn render(spec: &Spec) -> Result<String, String> {
                 .text(format!("{value:.digits$}")),
         );
     }
-    let order: Vec<usize> = if design.top_first { (0..BANDS).rev().collect() } else { (0..BANDS).collect() };
+    let order: Vec<usize> = if design.top_first {
+        (0..BANDS).rev().collect()
+    } else {
+        (0..BANDS).collect()
+    };
     for band in order {
-        let mut path = Element::new("path").attr("d", &paths[band]).attr("fill", &design.fills[band]);
+        let mut path = Element::new("path")
+            .attr("d", &paths[band])
+            .attr("fill", &design.fills[band]);
         if let Some(opacity) = design.opacity.filter(|opacity| opacity[band] < 1.0) {
             path.set("opacity", opacity[band]);
         }
-        svg.child(path.attr("fill-rule", "evenodd").attr("clip-path", url(CLIP_ID)));
+        svg.child(
+            path.attr("fill-rule", "evenodd")
+                .attr("clip-path", url(CLIP_ID)),
+        );
     }
     Ok(svg.render())
 }

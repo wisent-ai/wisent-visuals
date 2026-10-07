@@ -65,7 +65,14 @@ fn colors(style: u32) -> Result<Colors, String> {
             brand("muted"),
             "#FFFFFF",
             "#000000",
-            [brand("primary"), "#FA5A46", "#FFB366", "#FFD699", "#B19ECC", "#A4C2F4"],
+            [
+                brand("primary"),
+                "#FA5A46",
+                "#FFB366",
+                "#FFD699",
+                "#B19ECC",
+                "#A4C2F4",
+            ],
         ),
         2 => (
             brand("surface"),
@@ -73,7 +80,9 @@ fn colors(style: u32) -> Result<Colors, String> {
             "#A9A9A9",
             "#FFFFFF",
             "#000000",
-            ["#FFFFFF", "#E0E0E0", "#C8C8C8", "#A9A9A9", "#909090", "#787878"],
+            [
+                "#FFFFFF", "#E0E0E0", "#C8C8C8", "#A9A9A9", "#909090", "#787878",
+            ],
         ),
         3 => (
             "#FFFFFF",
@@ -81,9 +90,15 @@ fn colors(style: u32) -> Result<Colors, String> {
             "#666666",
             "#000000",
             "#FFFFFF",
-            ["#303030", "#484848", "#606060", "#787878", "#909090", "#C8C8C8"],
+            [
+                "#303030", "#484848", "#606060", "#787878", "#909090", "#C8C8C8",
+            ],
         ),
-        other => return Err(format!("Pie style must be 1 (brand), 2 (black) or 3 (white), got {other}")),
+        other => {
+            return Err(format!(
+                "Pie style must be 1 (brand), 2 (black) or 3 (white), got {other}"
+            ))
+        }
     };
     Ok(Colors::new(
         &[
@@ -103,10 +118,21 @@ fn slice_color(colors: &Colors, index: usize) -> &str {
 }
 
 fn text(x: f64, y: f64, fill: &str, size: f64, content: &str) -> Element {
-    Element::new("text").attr("x", x).attr("y", y).attr("fill", fill).attr("font-size", size).attr("font-weight", "400").text(content)
+    Element::new("text")
+        .attr("x", x)
+        .attr("y", y)
+        .attr("fill", fill)
+        .attr("font-size", size)
+        .attr("font-weight", "400")
+        .text(content)
 }
 
-fn legend(svg: &mut Element, colors: &Colors, labels: &[String], values: &[f64]) -> Result<(), String> {
+fn legend(
+    svg: &mut Element,
+    colors: &Colors,
+    labels: &[String],
+    values: &[f64],
+) -> Result<(), String> {
     let legend_y = PADDING + LEGEND_OFFSET;
     let mut legend_x = PADDING;
     for (index, label) in labels.iter().take(values.len()).enumerate() {
@@ -120,7 +146,13 @@ fn legend(svg: &mut Element, colors: &Colors, labels: &[String], values: &[f64])
                 .attr("rx", SWATCH_RADIUS)
                 .attr("ry", SWATCH_RADIUS),
         );
-        svg.child(text(legend_x + SWATCH + LABEL_GAP, legend_y + LABEL_BASELINE, &colors["legend_text"], LABEL_SIZE, label));
+        svg.child(text(
+            legend_x + SWATCH + LABEL_GAP,
+            legend_y + LABEL_BASELINE,
+            &colors["legend_text"],
+            LABEL_SIZE,
+            label,
+        ));
         legend_x += SWATCH + LABEL_GAP + text_width(label, LABEL_SIZE)? + ENTRY_GAP;
     }
     Ok(())
@@ -143,9 +175,16 @@ fn slice(cx: f64, cy: f64, outer: f64, inner: f64, start: f64, sweep: f64) -> St
 pub fn render(spec: &Spec) -> Result<String, String> {
     let colors = colors(spec.style)?;
     let mut svg = chart_frame(spec.width, spec.height, &colors["background"]);
-    svg.child(text(PADDING, PADDING + TITLE_SIZE, &colors["title"], TITLE_SIZE, spec.title.as_deref().unwrap_or("Pie chart")));
+    svg.child(text(
+        PADDING,
+        PADDING + TITLE_SIZE,
+        &colors["title"],
+        TITLE_SIZE,
+        spec.title.as_deref().unwrap_or("Pie chart"),
+    ));
     legend(&mut svg, &colors, &spec.labels, &spec.values)?;
-    let center_y = TITLE_HEIGHT + LEGEND_HEIGHT + ((spec.height - TITLE_HEIGHT - LEGEND_HEIGHT) / 2.0).floor();
+    let center_y =
+        TITLE_HEIGHT + LEGEND_HEIGHT + ((spec.height - TITLE_HEIGHT - LEGEND_HEIGHT) / 2.0).floor();
     let center_x = (spec.width / 2.0).floor();
     let total: f64 = spec.values.iter().sum();
     if total != 0.0 {
@@ -154,7 +193,12 @@ pub fn render(spec: &Spec) -> Result<String, String> {
         let inner = outer * INNER_RADIUS_RATIO;
         // Clockwise from twelve o'clock.
         let mut start = -90.0;
-        for (index, value) in spec.values.iter().enumerate().filter(|(_, value)| **value > 0.0) {
+        for (index, value) in spec
+            .values
+            .iter()
+            .enumerate()
+            .filter(|(_, value)| **value > 0.0)
+        {
             let sweep = value / total * 360.0;
             svg.child(
                 Element::new("path")
@@ -166,9 +210,30 @@ pub fn render(spec: &Spec) -> Result<String, String> {
             start += sweep;
         }
     }
-    let center_value = spec.center_value.clone().unwrap_or_else(|| total.trunc().to_string());
+    let center_value = spec
+        .center_value
+        .clone()
+        .unwrap_or_else(|| total.trunc().to_string());
     let label = spec.center_label.as_deref().unwrap_or("Total");
-    svg.child(text(center_x, center_y - CENTER_OFFSET, &colors["center_text"], CENTER_LABEL_SIZE, label).attr("text-anchor", "middle"));
-    svg.child(text(center_x, center_y + CENTER_OFFSET, &colors["center_text"], CENTER_VALUE_SIZE, &center_value).attr("text-anchor", "middle"));
+    svg.child(
+        text(
+            center_x,
+            center_y - CENTER_OFFSET,
+            &colors["center_text"],
+            CENTER_LABEL_SIZE,
+            label,
+        )
+        .attr("text-anchor", "middle"),
+    );
+    svg.child(
+        text(
+            center_x,
+            center_y + CENTER_OFFSET,
+            &colors["center_text"],
+            CENTER_VALUE_SIZE,
+            &center_value,
+        )
+        .attr("text-anchor", "middle"),
+    );
     Ok(svg.render())
 }

@@ -24,7 +24,17 @@ const MAX_RADIUS: f64 = 20.0;
 
 /// The most fractional digits any of `values` is written with.
 fn precision(values: &[f64]) -> usize {
-    values.iter().map(|value| value.to_string().split_once('.').map(|(_, fraction)| fraction.len()).unwrap_or(0)).max().unwrap_or(0)
+    values
+        .iter()
+        .map(|value| {
+            value
+                .to_string()
+                .split_once('.')
+                .map(|(_, fraction)| fraction.len())
+                .unwrap_or(0)
+        })
+        .max()
+        .unwrap_or(0)
 }
 
 fn line(x1: f64, y1: f64, x2: f64, y2: f64, colors: &Colors) -> Element {
@@ -38,7 +48,14 @@ fn line(x1: f64, y1: f64, x2: f64, y2: f64, colors: &Colors) -> Element {
         .attr("opacity", GRID_OPACITY)
 }
 
-pub(super) fn draw(svg: &mut Element, spec: &Spec, colors: &Colors, xs: &[f64], ys: &[f64], categories: Option<&[usize]>) {
+pub(super) fn draw(
+    svg: &mut Element,
+    spec: &Spec,
+    colors: &Colors,
+    xs: &[f64],
+    ys: &[f64],
+    categories: Option<&[usize]>,
+) {
     let (x, y) = (PADDING_X + Y_LABEL_ROOM, CHART_TOP_MARGIN);
     let width = spec.width - PADDING_X * 2.0 - RIGHT_MARGIN;
     let height = spec.height - CHART_TOP_MARGIN - BOTTOM_MARGIN;
@@ -50,13 +67,27 @@ pub(super) fn draw(svg: &mut Element, spec: &Spec, colors: &Colors, xs: &[f64], 
         let y_pos = y + step * height / bands;
         svg.child(line(x, y_pos, x + width, y_pos, colors));
         let value = y_max - step * (y_max - y_min) / bands;
-        svg.child(text(x - Y_LABEL_GAP, y_pos + Y_LABEL_BASELINE, &colors["axis_text"], TICK_SIZE, "end", &format!("{value:.y_digits$}")));
+        svg.child(text(
+            x - Y_LABEL_GAP,
+            y_pos + Y_LABEL_BASELINE,
+            &colors["axis_text"],
+            TICK_SIZE,
+            "end",
+            &format!("{value:.y_digits$}"),
+        ));
         let x_pos = x + step * width / bands;
         svg.child(line(x_pos, y, x_pos, y + height, colors));
         if band < BANDS {
             let value = x_min + (step + 0.5) * (x_max - x_min) / bands;
             let centre = x_pos + width / bands / 2.0;
-            svg.child(text(centre, y + height + X_LABEL_OFFSET, &colors["axis_text"], TICK_SIZE, "middle", &format!("{value:.x_digits$}")));
+            svg.child(text(
+                centre,
+                y + height + X_LABEL_OFFSET,
+                &colors["axis_text"],
+                TICK_SIZE,
+                "middle",
+                &format!("{value:.x_digits$}"),
+            ));
         }
     }
     let (size_min, size_max) = bounds(&spec.sizes);
@@ -64,6 +95,11 @@ pub(super) fn draw(svg: &mut Element, spec: &Spec, colors: &Colors, xs: &[f64], 
         let cx = x + share(*px, x_min, x_max) * width;
         let cy = y + height - share(*py, y_min, y_max) * height;
         let radius = MIN_RADIUS + share(*size, size_min, size_max) * (MAX_RADIUS - MIN_RADIUS);
-        svg.child(bubble(cx, cy, radius, point_color(colors, categories, index)));
+        svg.child(bubble(
+            cx,
+            cy,
+            radius,
+            point_color(colors, categories, index),
+        ));
     }
 }

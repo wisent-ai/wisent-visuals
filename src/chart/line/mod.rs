@@ -51,24 +51,51 @@ pub struct Spec {
 
 /// The most fractional digits any of `values` is written with.
 fn precision(values: &[f64]) -> usize {
-    values.iter().map(|value| value.to_string().split_once('.').map(|(_, fraction)| fraction.len()).unwrap_or(0)).max().unwrap_or(0)
+    values
+        .iter()
+        .map(|value| {
+            value
+                .to_string()
+                .split_once('.')
+                .map(|(_, fraction)| fraction.len())
+                .unwrap_or(0)
+        })
+        .max()
+        .unwrap_or(0)
 }
 
 pub fn render(spec: &Spec) -> Result<String, String> {
     let style = style::line_style(&spec.style)?;
     let colors = &style.colors;
     if spec.x.len() < 2 {
-        return Err(format!("a line chart needs at least two x values, got {}", spec.x.len()));
+        return Err(format!(
+            "a line chart needs at least two x values, got {}",
+            spec.x.len()
+        ));
     }
-    if let Some(index) = spec.y_series.iter().position(|series| series.len() != spec.x.len()) {
-        return Err(format!("series {index} has {} values but there are {} x values", spec.y_series[index].len(), spec.x.len()));
+    if let Some(index) = spec
+        .y_series
+        .iter()
+        .position(|series| series.len() != spec.x.len())
+    {
+        return Err(format!(
+            "series {index} has {} values but there are {} x values",
+            spec.y_series[index].len(),
+            spec.x.len()
+        ));
     }
     let series_colors: Vec<String> = match &spec.colors {
         Some(given) if given.len() < spec.y_series.len() => {
-            return Err(format!("{} colors given for {} series", given.len(), spec.y_series.len()));
+            return Err(format!(
+                "{} colors given for {} series",
+                given.len(),
+                spec.y_series.len()
+            ));
         }
         Some(given) => given.clone(),
-        None => (0..spec.y_series.len()).map(|index| colors.series_color(index).to_string()).collect(),
+        None => (0..spec.y_series.len())
+            .map(|index| colors.series_color(index).to_string())
+            .collect(),
     };
     let labels = spec.labels.clone().unwrap_or_default();
     let mut svg = chart_frame(spec.width, spec.height, &colors["background"]);
@@ -81,7 +108,10 @@ pub fn render(spec: &Spec) -> Result<String, String> {
         PADDING_Y,
         TITLE_GAP,
         CHART_TOP_MARGIN,
-        LegendFills::Given { fills: &series_colors, extra: None },
+        LegendFills::Given {
+            fills: &series_colors,
+            extra: None,
+        },
     )?;
     let chart_x = PADDING_X;
     let chart_width = spec.width - 2.0 * PADDING_X;
@@ -123,14 +153,25 @@ pub fn render(spec: &Spec) -> Result<String, String> {
                 .attr("stroke-width", "1"),
         );
     }
-    let (low, high) = spec.y_series.iter().flatten().fold((f64::MAX, f64::MIN), |(low, high), value| (low.min(*value), high.max(*value)));
+    let (low, high) = spec
+        .y_series
+        .iter()
+        .flatten()
+        .fold((f64::MAX, f64::MIN), |(low, high), value| {
+            (low.min(*value), high.max(*value))
+        });
     let range = if high == low { 1.0 } else { high - low };
     for (index, series) in spec.y_series.iter().enumerate() {
         let color = &series_colors[index];
         let points: Vec<(f64, f64)> = series
             .iter()
             .enumerate()
-            .map(|(position, value)| (chart_x + position as f64 * step, chart_y + chart_height - (value - low) / range * chart_height))
+            .map(|(position, value)| {
+                (
+                    chart_x + position as f64 * step,
+                    chart_y + chart_height - (value - low) / range * chart_height,
+                )
+            })
             .collect();
         let path: Vec<String> = points
             .iter()

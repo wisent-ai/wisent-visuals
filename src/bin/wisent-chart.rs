@@ -8,7 +8,11 @@ use clap::Parser;
 use wisent_visuals::chart::ChartSpec;
 
 #[derive(Parser)]
-#[command(name = "wisent-chart", version, about = "Draw a Wisent brand chart from a JSON spec.")]
+#[command(
+    name = "wisent-chart",
+    version,
+    about = "Draw a Wisent brand chart from a JSON spec."
+)]
 struct Args {
     /// JSON chart spec: `kind` (area, bar, bubble, column, line, pie or radar)
     /// and that family's fields. `-` reads it from standard input.
@@ -22,7 +26,8 @@ struct Args {
 fn run(args: &Args) -> Result<(), String> {
     let origin = args.spec.display().to_string();
     let text = if origin == "-" {
-        std::io::read_to_string(std::io::stdin()).map_err(|error| format!("standard input: {error}"))?
+        std::io::read_to_string(std::io::stdin())
+            .map_err(|error| format!("standard input: {error}"))?
     } else {
         std::fs::read_to_string(&args.spec).map_err(|error| format!("{origin}: {error}"))?
     };

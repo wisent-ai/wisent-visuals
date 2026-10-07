@@ -15,7 +15,10 @@ pub const BRAND_COLORS: [(&str, &str); 8] = [
 
 /// The brand colour for `role`; `None` for a role the identity does not declare.
 pub fn brand_color(role: &str) -> Option<&'static str> {
-    BRAND_COLORS.iter().find(|(name, _)| *name == role).map(|(_, value)| *value)
+    BRAND_COLORS
+        .iter()
+        .find(|(name, _)| *name == role)
+        .map(|(_, value)| *value)
 }
 
 /// The family name every SVG asks for; the font files below carry it.
