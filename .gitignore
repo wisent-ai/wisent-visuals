@@ -24,3 +24,4 @@ tools/.neurips_corpus/
 
 # Rust
 /target/
+/.build/

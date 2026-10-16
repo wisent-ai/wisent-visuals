@@ -47,11 +47,14 @@ fn checkouts(root: &Path) -> Result<Vec<PathBuf>, String> {
     if !root.is_dir() {
         return Ok(found);
     }
-    let mut children: Vec<PathBuf> = fs::read_dir(root)
-        .map_err(|e| format!("{}: {e}", root.display()))?
-        .filter_map(|entry| entry.ok().map(|entry| entry.path()))
-        .filter(|path| path.is_dir() && path.join(".git").exists())
-        .collect();
+    let unlistable = |e: std::io::Error| format!("{}: {e}", root.display());
+    let mut children = Vec::new();
+    for entry in fs::read_dir(root).map_err(unlistable)? {
+        let path = entry.map_err(unlistable)?.path();
+        if path.is_dir() && path.join(".git").exists() {
+            children.push(path);
+        }
+    }
     children.sort();
     found.extend(children);
     Ok(found)
@@ -97,7 +100,10 @@ fn record(repository: &Path, push: bool) -> Declaration {
             String::new(),
         );
     }
-    let revision = git(repository, &["rev-parse", "--short", "HEAD"]).unwrap_or_default();
+    let revision = match git(repository, &["rev-parse", "--short", "HEAD"]) {
+        Ok(revision) => revision,
+        Err(detail) => format!("unknown (git rev-parse: {detail})"),
+    };
     if !push {
         return Declaration::new(repository, true, "declared and committed", revision);
     }
@@ -118,7 +124,23 @@ pub fn declare(repository: &Path, apply: bool, commit: bool, push: bool) -> Decl
         return Declaration::new(repository, false, "no published banner", String::new());
     }
     let target = repository.join(AUDIT_IGNORE_PATH);
-    let existing = fs::read_to_string(&target).ok();
+    // Only an absent file starts fresh: one that cannot be read may hold other
+    // exemptions, and writing the declaration over it would delete them.
+    let existing = match fs::read_to_string(&target) {
+        Ok(text) => Some(text),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
+        Err(error) => {
+            return Declaration::new(
+                repository,
+                false,
+                format!(
+                    "{} cannot be read, so it is left as it is: {error}",
+                    target.display()
+                ),
+                String::new(),
+            );
+        }
+    };
     let Some(declaration) = audit_declaration(existing.as_deref()) else {
         return Declaration::new(repository, false, "already declared", String::new());
     };

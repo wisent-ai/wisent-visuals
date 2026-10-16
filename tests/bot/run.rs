@@ -119,6 +119,37 @@ fn an_existing_declaration_is_appended_to_not_replaced() {
 }
 
 #[test]
+fn a_declaration_file_that_cannot_be_read_is_left_as_it_is() {
+    let root = checkouts("unreadable");
+    let published = root.join("b-published");
+    let declaration = published.join(".tama/violations-ignore");
+    fs::create_dir_all(published.join(".tama")).unwrap();
+    // Not UTF-8, so it cannot be read as text; written over, the exemptions
+    // it holds would be lost.
+    let held = b"Cargo.lock\n\xff\xfe\n".to_vec();
+    fs::write(&declaration, &held).unwrap();
+    let applied = bot(&[
+        "declare-local",
+        "--root",
+        published.to_str().unwrap(),
+        "--apply",
+    ]);
+    let rows = rows(&applied);
+    let row = rows.first().expect("one row for the checkout");
+    let reason = row["reason"].as_str().unwrap();
+    assert!(
+        reason.contains("cannot be read, so it is left as it is"),
+        "{reason}"
+    );
+    assert_eq!(row["wrote"], false);
+    assert_eq!(
+        fs::read(&declaration).unwrap(),
+        held,
+        "the file was rewritten"
+    );
+}
+
+#[test]
 fn mutations_without_a_token_are_refused_before_any_request() {
     let mutations = [
         "sync",
